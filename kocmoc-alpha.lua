@@ -44,6 +44,10 @@ local temptable = {
     alpha = false,
     beta = false,
     invis = false,
+    sprouts = {
+        detected = false,
+        coords
+    },
     cache = {
         autofarm = false,
         automondo = false,
@@ -115,7 +119,8 @@ local kocmoc = {
         loopfarmspeed = false,
         mobquests = false,
         traincrab = false,
-        avoidmobs = false
+        avoidmobs = false,
+        farmsprouts = false
     },
     vars = {
         field = "Ant Field",
@@ -362,6 +367,7 @@ farmingtwo:Cheat("Checkbox", "Auto Dispenser", function(State) kocmoc.toggles.au
 farmingtwo:Cheat("Checkbox", "Auto Field Boosters", function(State) kocmoc.toggles.autoboosters = not kocmoc.toggles.autoboosters end)
 farmingtwo:Cheat("Checkbox", "Auto Wealth Clock", function(State) kocmoc.toggles.clock = not kocmoc.toggles.clock end)
 farmingtwo:Cheat("Checkbox", "Auto Free Antpasses", function(State) kocmoc.toggles.freeantpass = not kocmoc.toggles.freeantpass end)
+farmingtwo:Cheat("Checkbox", "Farm Sprouts", function(State) kocmoc.toggles.farmsprouts = not kocmoc.toggles.farmsprouts end)
 farmingtwo:Cheat("Checkbox", "Teleport To Rares", function(State) kocmoc.toggles.farmrares = not kocmoc.toggles.farmrares end)
 farmingtwo:Cheat("Checkbox", "Auto Accept/Confirm Quest", function(State) kocmoc.toggles.autoquest = not kocmoc.toggles.autoquest end)
 farmingtwo:Cheat("Checkbox", "Auto Do Field And Pollen Quests", function(State) kocmoc.toggles.autodoquest = not kocmoc.toggles.autodoquest end)
@@ -697,6 +703,10 @@ task.spawn(function() while task.wait() do
         end
         fieldpos = CFrame.new(fieldselected.Position.X, fieldselected.Position.Y+3, fieldselected.Position.Z)
         fieldposition = fieldselected.Position
+        if temptable.sprouts.detected and temptable.sprouts.coords then
+            fieldposition = temptable.sprouts.coords.Position
+            fieldpos = temptable.sprouts.coords
+        end
         if tonumber(pollenpercentage) < tonumber(kocmoc.vars.convertat) then
             if not temptable.tokensfarm then
                 api.tween(2, fieldpos)
@@ -795,6 +805,19 @@ task.spawn(function()
 	end
 end)
 
+game:GetService("Workspace").Particles.Folder2.ChildAdded:Connect(function(child)
+    if child.Name == "Sprout" then
+        temptable.sprouts.detected = true
+        temptable.sprouts.coords = child.CFrame
+    end
+end)
+game:GetService("Workspace").Particles.Folder2.ChildRemoved:Connect(function(child)
+    if child.Name == "Sprout" then
+        task.wait(30)
+        temptable.sprouts.detected = false
+        temptable.sprouts.coords = ""
+    end
+end)
 Workspace.Particles.ChildAdded:Connect(function(instance)
     if string.find(instance.Name, "Vicious") then
         temptable.detected.vicious = true
@@ -827,7 +850,7 @@ task.spawn(function() while task.wait(1) do
     game.CoreGui.xlpUI.Container.Categories.Home.L["Information"].Container["-- Gained Honey: 0"].Title.Text = "-- Gained Honey: "..api.suffixstring(temptable.honeycurrent - temptable.honeystart)
 end end)
 task.spawn(function() while task.wait(0.001) do
-    if kocmoc.toggles.traincrab then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-259, 110.8, 496.4) * CFrame.fromEulerAnglesXYZ(0, 110, 90) temptable.float = true temptable.float = false end
+    if kocmoc.toggles.traincrab then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-259, 111.8, 496.4) * CFrame.fromEulerAnglesXYZ(0, 110, 90) temptable.float = true temptable.float = false end
     if kocmoc.toggles.farmrares then for k,v in next, game.workspace.Collectibles:GetChildren() do decal = v:FindFirstChildOfClass("Decal") for e,r in next, kocmoc.rares do if decal.Texture == r or decal.Texture == "rbxassetid://"..r then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame break end end end end
     if kocmoc.toggles.autodig then if game.Players.LocalPlayer then if game.Players.LocalPlayer.Character then if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") then if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"):FindFirstChild("ClickEvent", true) then clickevent = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"):FindFirstChild("ClickEvent", true) or nil end end end if clickevent then clickevent:FireServer() end end end
 end end)
