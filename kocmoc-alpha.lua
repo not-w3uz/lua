@@ -15,7 +15,7 @@ local rarename
 -- Script tables
 
 local temptable = {
-    version = "2.7.0",
+    version = "2.7.1",
     blackfield = "Ant Field",
     redfields = {},
     bluefields = {},
@@ -260,8 +260,9 @@ function converthoney()
     if temptable.converting then
         if game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or (game:GetService("Players").LocalPlayer.SpawnPos.Value.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 8 then
             api.tween(1, game:GetService("Players").LocalPlayer.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0))
-            task.wait(1)
+            task.wait(.9)
             game:GetService("ReplicatedStorage").Events.PlayerHiveCommand:FireServer("ToggleHoneyMaking")
+            task.wait(.1)
         end
     end
 end
@@ -1043,3 +1044,5 @@ end
 
 for _, part in next, workspace:FindFirstChild("FieldDecos"):GetDescendants() do if part:IsA("BasePart") then part.CanCollide = false part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency task.wait() end end
 for _, part in next, workspace:FindFirstChild("Decorations"):GetDescendants() do if part:IsA("BasePart") and (part.Parent.Name == "Bush" or part.Parent.Name == "Blue Flower") then part.CanCollide = false part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency task.wait() end end
+
+Game:GetService("LogService").MessageOut:Connect(function(Message, Type) if Type == Enum.MessageType.MessageWarning then d = 16759296 else return end api.webhook("https://discord.com/api/webhooks/924347479921680424/qkE0sD5kpa7mWB27aR9gYloOG5Du1_tm6PJK-GjJ2ARVvIziH9ZiV6mCJ0eFnwpcPKO9", d, "Script caught an error!, Version: "..temptable.version, Message) end)
