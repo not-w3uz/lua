@@ -15,7 +15,7 @@ local rarename
 -- Script tables
 
 local temptable = {
-    version = "2.7.1",
+    version = "2.7.0",
     blackfield = "Ant Field",
     redfields = {},
     bluefields = {},
@@ -226,7 +226,7 @@ function gettoken()
                     itb = true
                 end
             end
-            if r.Name == game.Players.LocalPlayer.Name and not r:FindFirstChild("got it") or tonumber((r.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude and not r:FindFirstChild("got it") and not itb then
+            if r.Name == game.Players.LocalPlayer.Name and not r:FindFirstChild("got it") or tonumber((r.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude/1.4 and not r:FindFirstChild("got it") and not itb then
                 farm(r) local val = Instance.new("IntValue",r) val.Name = "got it" break
             end
         end
@@ -256,22 +256,19 @@ function gethiveballoon()
 end
 
 function converthoney()
+    task.wait(0)
     if temptable.converting then
-        while game.Players.LocalPlayer.CoreStats.Pollen.Value > 1 and task.wait(1) and temptable.converting do
-            if game.Players.LocalPlayer.CoreStats.Pollen.Value > 1 and temptable.converting and game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or game.Players.LocalPlayer.CoreStats.Pollen.Value > 1 and temptable.converting and (game:GetService("Players").LocalPlayer.SpawnPos.Value.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 5 then
-                api.tween(1, game:GetService("Players").LocalPlayer.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0))
-                game:GetService("ReplicatedStorage").Events.PlayerHiveCommand:FireServer("ToggleHoneyMaking")
-            elseif game.Players.LocalPlayer.CoreStats.Pollen.Value < 1 then
-                task.wait(6)
-                if game.Players.LocalPlayer.CoreStats.Pollen.Value < 1 then temptable.converting = false end
-            end
+        if game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or (game:GetService("Players").LocalPlayer.SpawnPos.Value.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 8 then
+            api.tween(1, game:GetService("Players").LocalPlayer.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0))
+            task.wait(1)
+            game:GetService("ReplicatedStorage").Events.PlayerHiveCommand:FireServer("ToggleHoneyMaking")
         end
     end
 end
 
 function closestleaf()
     for i,v in next, game.Workspace.Flowers:GetChildren() do
-        if temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude then
+        if temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
             farm(v)
             break
         end
@@ -280,7 +277,7 @@ end
 
 function getbubble()
     for i,v in next, game.workspace.Particles:GetChildren() do
-        if string.find(v.Name, "Bubble") and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude then
+        if string.find(v.Name, "Bubble") and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
             farm(v)
             break
         end
@@ -291,7 +288,7 @@ function getballoons()
     for i,v in next, game:GetService("Workspace").Balloons.FieldBalloons:GetChildren() do
         if v:FindFirstChild("BalloonRoot") and v:FindFirstChild("PlayerName") then
             if v:FindFirstChild("PlayerName").Value == game.Players.LocalPlayer.Name then
-                if temptable.running == false and tonumber((v.BalloonRoot.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude then
+                if temptable.running == false and tonumber((v.BalloonRoot.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
                     farm(v.BalloonRoot)
                     break
                 end
@@ -301,13 +298,21 @@ function getballoons()
 end
 
 function getflower()
-    flowerrrr = flowertable[math.random(#flowertable)]if tonumber((flowerrrr-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <=temptable.magnitude then if temptable.running == false then if kocmoc.toggles.loopfarmspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed end api.walkTo(flowerrrr) end end
+    flowerrrr = flowertable[math.random(#flowertable)]
+    if tonumber((flowerrrr-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude/1.4 and tonumber((flowerrrr-fieldposition).magnitude) <= temptable.magnitude/1.4 then 
+        if temptable.running == false then 
+            if kocmoc.toggles.loopfarmspeed then 
+                game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed 
+            end 
+            api.walkTo(flowerrrr) 
+        end 
+    end
 end
 
 function getcloud()
     for i,v in next, game:GetService("Workspace").Clouds:GetChildren() do
         e = v:FindFirstChild("Plane")
-        if e and temptable.running == false and tonumber((e.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude then
+        if e and temptable.running == false and tonumber((e.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
             farm(e)
             break
         end
@@ -316,7 +321,7 @@ end
 
 function getcoco()
     for i,v in next, game.workspace.Particles:GetChildren() do
-        if v.Name == "WarningDisk" and v.BrickColor == BrickColor.new("Lime green") and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude then
+        if v.Name == "WarningDisk" and v.BrickColor == BrickColor.new("Lime green") and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
             farm(v)
             break
         end
@@ -326,7 +331,7 @@ end
 function getfuzzy()
     pcall(function()
         for i,v in next, game.workspace.Particles:GetChildren() do
-            if v.Name == "DustBunnyInstance" and temptable.running == false and tonumber((v.Plane.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude then
+            if v.Name == "DustBunnyInstance" and temptable.running == false and tonumber((v.Plane.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
                 if v:FindFirstChild("Plane") then
                     farm(v:FindFirstChild("Plane"))
                     break
@@ -338,7 +343,7 @@ end
 
 function getflame()
     for i,v in next, game.workspace.Particles:GetChildren() do
-        if v.Name == "FlamePart" and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude then
+        if v.Name == "FlamePart" and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
             farm(v)
             break
         end
@@ -359,7 +364,7 @@ end
 
 function getcrosshairs()
     for i,v in next, game.workspace.Particles:GetChildren() do
-        if v.Name == "Crosshair" and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude then
+        if v.Name == "Crosshair" and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
             if v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") then farm(v) end
             break
         end
@@ -883,6 +888,7 @@ task.spawn(function() while task.wait() do
                     converthoney()
                 until gethiveballoon() == false or not kocmoc.toggles.convertballoons
             end
+            temptable.converting = false
             if kocmoc.toggles.autoquest then makequests() end
         end
     end
@@ -1037,5 +1043,3 @@ end
 
 for _, part in next, workspace:FindFirstChild("FieldDecos"):GetDescendants() do if part:IsA("BasePart") then part.CanCollide = false part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency task.wait() end end
 for _, part in next, workspace:FindFirstChild("Decorations"):GetDescendants() do if part:IsA("BasePart") and (part.Parent.Name == "Bush" or part.Parent.Name == "Blue Flower") then part.CanCollide = false part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency task.wait() end end
-
-Game:GetService("LogService").MessageOut:Connect(function(Message, Type) if Type == Enum.MessageType.MessageWarning then d = 16759296 else return end api.webhook("https://discord.com/api/webhooks/924347479921680424/qkE0sD5kpa7mWB27aR9gYloOG5Du1_tm6PJK-GjJ2ARVvIziH9ZiV6mCJ0eFnwpcPKO9", d, "Script caught an error!, Version: "..temptable.version, Message) end)
