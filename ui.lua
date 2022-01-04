@@ -30,16 +30,16 @@ function xlp.new(ProjectName)
 
 	local toggled = true
 	local typing = false
-	local savedposition = UDim2.new(0.1, 0, 0.1, 0)
+	local savedposition = UDim2.new(0.5, 0, 0.1, 0)
 
-	if not xlp.gs["RunService"]:IsStudio() and self.gs["CoreGui"]:FindFirstChild(cachename) then
+	if not xlp.gs["RunService"]:IsStudio() and self.gs["CoreGui"]:FindFirstChild(ProjectName) then
 		warn("xlp:", "instance already exists in coregui!")	
 		return
 	end
 
 	xlpData = {
 		UpConnection = nil,
-		ToggleKey = Enum.KeyCode.Home,
+		ToggleKey = Enum.KeyCode.J,
 	}
 
 	xlpObject.ChangeToggleKey = function(NewKey)
@@ -62,7 +62,8 @@ function xlp.new(ProjectName)
 				if toggled then
 					pcall(xlpObject.Body.TweenPosition, xlpObject.Body, savedposition, "Out", "Sine", 0.5, true)
 				else
-					pcall(xlpObject.Body.TweenPosition, xlpObject.Body, UDim2.new(savedposition.Width.Scale, savedposition.Width.Offset, 1.5, 0), "Out", "Sine", 0.5, true)
+					savedposition = xlpObject.Body.Position
+					pcall(xlpObject.Body.TweenPosition, xlpObject.Body, UDim2.new(savedposition.X.Scale, 0, 1, 0), "Out", "Sine", 0.5, true)
 				end
 			end
 		end)
@@ -73,9 +74,10 @@ function xlp.new(ProjectName)
 			toggled = not toggled
 
 			if toggled then
-				xlpObject.Body:TweenPosition(UDim2.new(0.1, 0, 0.1, 0), "Out", "Sine", 0.5, true)
+				xlpObject.Body:TweenPosition(savedposition, "Out", "Sine", 0.5, true)
 			else
-				xlpObject.Body:TweenPosition(UDim2.new(0.1, 0, -1, 0), "Out", "Sine", 0.5, true)
+				savedposition = xlpObject.Body.Position
+				xlpObject.Body:TweenPosition(UDim2.new(savedposition.X.Scale, 0, 1, 0), "Out", "Sine", 0.5, true)
 			end
 		end
 	end)
