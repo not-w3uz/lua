@@ -224,7 +224,17 @@ function xlp.new(ProjectName)
 			local Num = category.Container_:FindFirstChild(Sector)
 
 			if Num then
-				return 2
+				local Sectors = {}
+				for _, Sect in next, Num:GetChildren() do
+					if Sect:IsA("Frame") then
+						table.insert{Sectors, Sect}
+					end
+				end
+				if #Sectors % 2 == 0 then
+					return 2
+				else
+					return 1
+				end
 			else
 				return 1
 			end
