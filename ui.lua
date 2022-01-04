@@ -30,7 +30,7 @@ function xlp.new(ProjectName)
 
 	local toggled = true
 	local typing = false
-	local savedposition = UDim2.new(0.5, 0, 0.5, 0)
+	local savedposition = UDim2.new(0.1, 0, 0.1, 0)
 
 	if not xlp.gs["RunService"]:IsStudio() and self.gs["CoreGui"]:FindFirstChild(cachename) then
 		warn("xlp:", "instance already exists in coregui!")	
@@ -46,7 +46,7 @@ function xlp.new(ProjectName)
 		xlpData.ToggleKey = NewKey
 
 		if not ProjectName then
-			xlpObject.tip.Text = "Press '".. string.sub(tostring(NewKey), 14) .."' to hide this menu"
+			xlpObject.Title.Text = "Press '".. string.sub(tostring(NewKey), 14) .."' to hide this menu"
 		end
 
 		if xlpData.UpConnection then
@@ -57,13 +57,12 @@ function xlp.new(ProjectName)
 			if Input.KeyCode == xlpData.ToggleKey and not typing then
 				toggled = not toggled
 
-				pcall(function() xlpObject.modal.Modal = toggled end)
+				pcall(function() xlpObject.modaModal = toggled end)
 
 				if toggled then
-					pcall(xlpObject.container.TweenPosition, xlpObject.container, savedposition, "Out", "Sine", 0.5, true)
+					pcall(xlpObject.Body.TweenPosition, xlpObject.Body, savedposition, "Out", "Sine", 0.5, true)
 				else
-					savedposition = xlpObject.container.Position;
-					pcall(xlpObject.container.TweenPosition, xlpObject.container, UDim2.new(savedposition.Width.Scale, savedposition.Width.Offset, 1.5, 0), "Out", "Sine", 0.5, true)
+					pcall(xlpObject.Body.TweenPosition, xlpObject.Body, UDim2.new(savedposition.Width.Scale, savedposition.Width.Offset, 1.5, 0), "Out", "Sine", 0.5, true)
 				end
 			end
 		end)
@@ -74,9 +73,9 @@ function xlp.new(ProjectName)
 			toggled = not toggled
 
 			if toggled then
-				xlpObject.container:TweenPosition(UDim2.new(0.5, 0, 0.5, 0), "Out", "Sine", 0.5, true)
+				xlpObject.Body:TweenPosition(UDim2.new(0.1, 0, 0.1, 0), "Out", "Sine", 0.5, true)
 			else
-				xlpObject.container:TweenPosition(UDim2.new(0.5, 0, 1.5, 0), "Out", "Sine", 0.5, true)
+				xlpObject.Body:TweenPosition(UDim2.new(0.1, 0, -1, 0), "Out", "Sine", 0.5, true)
 			end
 		end
 	end)
@@ -93,10 +92,12 @@ function xlp.new(ProjectName)
 
 	xlpObject.Body = self:Create("Frame", {
 		Name = "UIScreen",
+		Draggable = true,
+		Active = true,
 		BackgroundColor3 = Color3.fromRGB(31, 27, 27),
 		BorderColor3 = Color3.fromRGB(38, 34, 33),
 		BorderSizePixel = 0,
-		Position = UDim2.new(0.168461531, 0, 0.119018406, 0),
+		Position = UDim2.new(0.1, 0, 0.1, 0),
 		Size = UDim2.new(0, 871, 0, 471),
 	})
 
@@ -135,7 +136,6 @@ function xlp.new(ProjectName)
 
 	xlpObject.vTitle = self:Create("TextLabel", {
 		Name = "vTitle",
-		Parent = Header,
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 		BackgroundTransparency = 1.000,
 		Position = UDim2.new(0.768507659, 0, 0.0882352963, 0),
@@ -220,28 +220,15 @@ function xlp.new(ProjectName)
 			xlp.gs["TweenService"]:Create(category.Button, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
 		end)
 
-		local function calculateSector(Sector)
-			local Num = category.Container_:FindFirstChild(Sector)
-
-			if Num then
-				local Sectors = {}
-				for _, Sect in next, Num:GetChildren() do
-					if Sect:IsA("Frame") then
-						table.insert{Sectors, Sect}
-					end
-				end
-				if #Sectors % 2 == 0 then
-					return 2
-				else
-					return 1
-				end
-			else
-				return 1
-			end
-		end
-
 		function category:Sector(SectorName)
 			local sector = {}
+
+			local uilistlayout_
+			local uilistlayout
+			local uipadding 
+
+			local L
+			local R 
 
 			if category["Container_"]:FindFirstChild(name) then
 				sector.container = category["Container_"]:FindFirstChild(name)
@@ -261,6 +248,42 @@ function xlp.new(ProjectName)
 					ScrollBarThickness = 8,
 				})  
 
+                L = xlp:Create("Frame", {
+					Name = "L",
+					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					Size = UDim2.new(0, 422, 0, 355),
+				})
+
+				R = xlp:Create("Frame", {
+					Name = "R",
+					BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					Position = UDim2.new(1, 0, 0, 0),
+					Size = UDim2.new(0, 422, 0, 355),
+				})
+
+				uilistlayout_ = xlp:Create("UIListLayout", {
+					Padding = UDim.new(0, 5),
+					SortOrder = Enum.SortOrder.LayoutOrder,
+					FillDirection = "Vertical",
+				})
+
+				uilistlayout = xlp:Create("UIListLayout", {
+					Padding = UDim.new(0, 0),
+					SortOrder = Enum.SortOrder.LayoutOrder,
+					FillDirection = "Horizontal",
+				})
+	
+				uipadding = xlp:Create("UIPadding", {
+					PaddingBottom = UDim.new(0, 5),
+					PaddingLeft = UDim.new(0, 5),
+					PaddingRight = UDim.new(0, 5),
+					PaddingTop = UDim.new(0, 5),
+				})
+
                 category.Button.MouseButton1Down:Connect(function()
                     category["Container_"]["UIPageLayout"]:JumpTo(sector.container)
                 end)
@@ -268,11 +291,10 @@ function xlp.new(ProjectName)
 
 			sector.frame = xlp:Create("Frame", {
 				Name = SectorName,
-				LayoutOrder = calculateSector(name),
 				Parent = sector.container,
 				BackgroundColor3 = Color3.fromRGB(39, 35, 34),
 				Position = UDim2.new(0.00243469304, 0, 0.0201197304, 0),
-				Size = UDim2.new(0, 410, 0, 290),
+				Size = UDim2.new(0, 420.5, 0, 290),
 			})
 
 			local textlabel = xlp:Create("TextLabel", {
@@ -280,28 +302,13 @@ function xlp.new(ProjectName)
 				BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 				BackgroundTransparency = 1,
 				Position = UDim2.new(0.5, 0, 0.07, 0),
-				Size = UDim2.new(0, 110, 0, 25),
+				Size = UDim2.new(0, 419, 0, 25),
 				Font = Enum.Font.GothamBlack,
 				Text = SectorName..":",
 				TextColor3 = Color3.fromRGB(255, 255, 255),
 				TextScaled = true,
 				TextSize = 18,
 				TextWrapped = true,
-			})
-
-			local uilistlayout = xlp:Create("UIListLayout", {
-				Parent = sector.container,
-				Padding = UDim.new(0, 20),
-				SortOrder = Enum.SortOrder.LayoutOrder,
-				FillDirection = "Horizontal",
-			})
-
-			local uipadding = xlp:Create("UIPadding", {
-				Parent = sector.container,
-				PaddingBottom = UDim.new(0, 5),
-				PaddingLeft = UDim.new(0, 5),
-				PaddingRight = UDim.new(0, 5),
-				PaddingTop = UDim.new(0, 5),
 			})
 
 			local uicorner2 = xlp:Create("UICorner", {
@@ -318,11 +325,6 @@ function xlp.new(ProjectName)
 				PaddingTop = UDim.new(0, 5),
 			})
 
-			if sector.frame.LayoutOrder == 1 then
-				uilistlayout.Parent = sector.container
-				uipadding.Parent = sector.container
-			end
-
 			uicorner2.Parent = sector.frame
 			uipadding2.Parent = sector.frame
 			textlabel.Parent = sector.frame
@@ -333,12 +335,32 @@ function xlp.new(ProjectName)
 
 				largestListSize = uilistlayout2.AbsoluteContentSize.Y
 
-				sector.container.CanvasSize = UDim2.new(0, 0, 0, largestListSize + 10)
-				sector.frame.Size = UDim2.new(0, 410, 0, largestListSize + 5)
+				sector.container.CanvasSize = UDim2.new(0, 0, 0, largestListSize + 30)
+				sector.frame.Size = UDim2.new(0, 419, 0, largestListSize + 5)
 			end)
 
+			if uilistlayout then
+				L.Parent = sector.container
+				R.Parent = sector.container
+				uilistlayout_:Clone().Parent = L
+				uilistlayout_.Parent = R
+				uilistlayout.Parent = sector.container
+				uipadding.Parent = sector.container
+			end
+
+			local function calculateSector()
+				local R_ = #sector.container.R:GetChildren() - 1
+				local L_ = #sector.container.L:GetChildren() - 1
+	
+				if L_ > R_ then
+					return "R"
+				else
+					return "L"
+				end
+			end
+
 			sector.container.Parent = category["Container_"]
-			sector.frame.Parent = sector.container
+			sector.frame.Parent = sector.container[calculateSector()]
 
 			return sector
 		end
@@ -359,7 +381,7 @@ function xlp.new(ProjectName)
 	xlpObject.UIPage.Parent = xlpObject.Container_
 
 	xlpObject.Header.Parent = xlpObject.Body
-	xlpObject.TitleLabel.Parent = xlpObject.Header
+	xlpObject.TitleLabeParent = xlpObject.Header
 	xlpObject.Title.Parent = xlpObject.Header
 	xlpObject.vTitle.Parent = xlpObject.Header
 	xlpObject.Corner2:Clone().Parent = xlpObject.Header
