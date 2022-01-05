@@ -227,8 +227,8 @@ function gettoken()
                     itb = true
                 end
             end
-            if r.Name == game.Players.LocalPlayer.Name and not r:FindFirstChild("got it") or tonumber((r.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude/1.4 and not r:FindFirstChild("got it") and not itb then
-                farm(r) local val = Instance.new("IntValue",r) val.Name = "got it" break
+            if tonumber((r.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude/1.4 and not itb and r.CFrame.YVector.Y == 1 then
+                farm(r)
             end
         end
     end
