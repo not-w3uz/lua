@@ -1,6 +1,6 @@
--- API Calls
-shared.notify = true
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/xlpuitest.lua"))()
+-- API CALLS
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/bracketv3.lua"))()
 local api = loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/xlpapi/main/api.lua"))()
 
 if not isfolder("kocmoc") then makefolder("kocmoc") end
@@ -15,7 +15,7 @@ local rarename
 -- Script tables
 
 local temptable = {
-    version = "2.7.0",
+    version = "2.8.1",
     blackfield = "Ant Field",
     redfields = {},
     bluefields = {},
@@ -87,10 +87,19 @@ table.sort(toystable)
 table.sort(spawnerstable)
 table.sort(collectorstable)
 
+-- float pad
+
+local floatpad = Instance.new("Part", game:GetService("Workspace"))
+floatpad.CanCollide = false
+floatpad.Anchored = true
+floatpad.Transparency = 1
+floatpad.Name = "FloatPad"
+
 -- config
 
 local kocmoc = {
     rares = {},
+    priority = {},
     bestfields = {
         red = "Pepper Patch",
         white = "Coconut Field",
@@ -164,14 +173,6 @@ local kocmoc = {
 
 local defaultkocmoc = kocmoc
 
--- float pad
-
-local floatpad = Instance.new("Part", game:GetService("Workspace"))
-floatpad.CanCollide = false
-floatpad.Anchored = true
-floatpad.Transparency = 1
-floatpad.Name = "FloatPad"
-
 -- functions
 
 function statsget() local StatCache = require(game.ReplicatedStorage.ClientStatCache) local stats = StatCache:Get() return stats end
@@ -228,6 +229,22 @@ function gettoken()
             end
             if r.Name == game.Players.LocalPlayer.Name and not r:FindFirstChild("got it") or tonumber((r.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude/1.4 and not r:FindFirstChild("got it") and not itb then
                 farm(r) local val = Instance.new("IntValue",r) val.Name = "got it" break
+            end
+        end
+    end
+end
+
+function getprioritytokens()
+    task.wait()
+    if temptable.running == false then
+        for e,r in next, game:GetService("Workspace").Collectibles:GetChildren() do
+            if r:FindFirstChildOfClass("Decal") then
+                local aaaaaaaa = string.split(r:FindFirstChildOfClass("Decal").Texture, 'rbxassetid://')[2]
+                if aaaaaaaa ~= nil and api.findvalue(kocmoc.priority, aaaaaaaa) then
+                    if r.Name == game.Players.LocalPlayer.Name and not r:FindFirstChild("got it") or tonumber((r.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude/1.4 and not r:FindFirstChild("got it") then
+                        farm(r) local val = Instance.new("IntValue",r) val.Name = "got it" break
+                    end
+                end
             end
         end
     end
@@ -399,106 +416,90 @@ function makequests()
     end end end end end
 end
 
--- gui
+local Config = { WindowName = "🌘  kocmoc | "..temptable.version, Color = Color3.fromRGB(164, 84, 255), Keybind = Enum.KeyCode.Semicolon}
+local Window = library:CreateWindow(Config, game:GetService("CoreGui"))
 
-local ui = library.new(true, "🌘  kocmoc | "..temptable.version)
-ui.ChangeToggleKey(Enum.KeyCode.Semicolon)
+local hometab = Window:CreateTab("Home")
+local farmtab = Window:CreateTab("Farming")
+local combtab = Window:CreateTab("Combat")
+local wayptab = Window:CreateTab("Waypoints")
+local misctab = Window:CreateTab("Misc")
+local extrtab = Window:CreateTab("Extra")
+local setttab = Window:CreateTab("Settings")
 
-local homecategory = ui:Category("Home")
-local main = ui:Category("Farming")
-local combat = ui:Category("Combat")
-local wayui = ui:Category("Waypoints")
---local timercat = ui:Category("Timers")
-local misc = ui:Category("Misc")
-local extrass = ui:Category("Extra")
-local settings = ui:Category("Settings")
+local information = hometab:CreateSection("Information")
+information:CreateLabel("Thanks you for using our script, "..api.nickname)
+information:CreateLabel("Script version: "..temptable.version)
+information:CreateLabel("Place version: "..game.PlaceVersion)
+information:CreateLabel("⚠️ - Not Safe Function")
+information:CreateLabel("⚙ - Configurable Function")
+information:CreateLabel("Place version: "..game.PlaceVersion)
+information:CreateLabel("Script by weuz_ and davidshavrov")
+local gainedhoneylabel = information:CreateLabel("Gained Honey: 0")
+information:CreateButton("Discord Invite", function() setclipboard("https://discord.gg/9vG8UJXuNf") end)
+information:CreateButton("Donation", function() setclipboard("https://qiwi.com/n/W33UZ") end)
 
--- home category
 
-local information = homecategory:Sector("Information")
-information:Cheat("Label", "-- Thank you for using our script, "..api.nickname)
-information:Cheat("Label", "-- Script version: "..temptable.version)
-information:Cheat("Label", "-- Place version: "..game.PlaceVersion)
-information:Cheat("Label", "-- Hide GUI Button: ;")
-information:Cheat("Label", "-- Script by weuz_ and davidshavrov")
-information:Cheat("Label", "-- Gained Honey: 0")
-information:Cheat("Button", "-- Discord Invite", function() setclipboard("https://discord.gg/9vG8UJXuNf") end, {text="Copy"})
-information:Cheat("Button", "-- Donation", function() setclipboard("https://qiwi.com/n/W33UZ") end, {text = 'Copy'})
-local changelog = homecategory:Sector("Changelog")
-changelog:Cheat("Label", "-- Improved Farm Puffshrooms")
-changelog:Cheat("Label", "-- Other minor changes")
+local farmo = farmtab:CreateSection("Farming")
+local fielddropdown = farmo:CreateDropdown("Field", fieldstable, function(String) kocmoc.vars.field = String end) fielddropdown:SetOption(fieldstable[1])
+convertatslider = farmo:CreateSlider("Convert At", 0, 100, 100, false, function(Value) kocmoc.vars.convertat = Value end)
+local autofarmtoggle = farmo:CreateToggle("Autofarm ⚙", nil, function(State) kocmoc.toggles.autofarm = State end) autofarmtoggle:CreateKeybind("U", function(Key) end)
+farmo:CreateToggle("Autodig", nil, function(State) kocmoc.toggles.autodig = State end)
+farmo:CreateToggle("Auto Sprinkler", nil, function(State) kocmoc.toggles.autosprinkler = State end)
+farmo:CreateToggle("Farm Bubbles", nil, function(State) kocmoc.toggles.farmbubbles = State end)
+farmo:CreateToggle("Farm Flames", nil, function(State) kocmoc.toggles.farmflame = State end)
+farmo:CreateToggle("Farm Coconuts", nil, function(State) kocmoc.toggles.farmcoco = State end)
+farmo:CreateToggle("Farm Precise Crosshairs", nil, function(State) kocmoc.toggles.collectcrosshairs = State end)
+farmo:CreateToggle("Farm Fuzzy Bombs", nil, function(State) kocmoc.toggles.farmfuzzy = State end)
+farmo:CreateToggle("Farm Under Balloons", nil, function(State) kocmoc.toggles.farmunderballoons = State end)
+farmo:CreateToggle("Farm Under Clouds", nil, function(State) kocmoc.toggles.farmclouds = State end)
+--farmo:CreateToggle("Farm Closest Leaves", nil, function(State) kocmoc.toggles.farmclosestleaf = State end)
 
--- farming category
+local farmt = farmtab:CreateSection("Farming")
+farmt:CreateToggle("Auto Dispenser ⚙", nil, function(State) kocmoc.toggles.autodispense = State end)
+farmt:CreateToggle("Auto Field Boosters ⚙", nil, function(State) kocmoc.toggles.autoboosters = State end)
+farmt:CreateToggle("Auto Wealth Clock", nil, function(State) kocmoc.toggles.clock = State end)
+farmt:CreateToggle("Auto Gingerbread Bears", nil, function(State) kocmoc.toggles.collectgingerbreads = State end)
+farmt:CreateToggle("Auto Free Antpasses", nil, function(State) kocmoc.toggles.freeantpass = State end)
+farmt:CreateToggle("Farm Sprouts", nil, function(State) kocmoc.toggles.farmsprouts = State end)
+farmt:CreateToggle("Farm Puffshrooms", nil, function(State) kocmoc.toggles.farmpuffshrooms = State end)
+farmt:CreateToggle("Farm Snowflakes ⚠️", nil, function(State) kocmoc.toggles.farmsnowflakes = State end)
+farmt:CreateToggle("Teleport To Rares ⚠️", nil, function(State) kocmoc.toggles.farmrares = State end)
+farmt:CreateToggle("Auto Accept/Confirm Quests ⚙", nil, function(State) kocmoc.toggles.autoquest = State end)
+farmt:CreateToggle("Auto Do Quests ⚙", nil, function(State) kocmoc.toggles.autodoquest = State end)
+farmt:CreateToggle("Auto Honeystorm", nil, function(State) kocmoc.toggles.honeystorm = State end)
 
-local farming = main:Sector("Farming")
-farming:Cheat("Dropdown", "Field", function(Option) temptable.tokensfarm = false kocmoc.vars.field = Option end, {options=fieldstable})
-farming:Cheat("Slider", "Convert at:", function(Value) kocmoc.vars.convertat = Value end, {min = 0, max = 100, suffix = "%"})
-farming:Cheat("Checkbox", "Autofarm", function(State) kocmoc.toggles.autofarm = not kocmoc.toggles.autofarm end)
-farming:Cheat("Checkbox", "Autodig", function(State) kocmoc.toggles.autodig = not kocmoc.toggles.autodig end)
-farming:Cheat("Checkbox", "Auto Sprinkler", function(State) kocmoc.toggles.autosprinkler = not kocmoc.toggles.autosprinkler end)
-farming:Cheat("Checkbox", "Farm Bubbles", function(State) kocmoc.toggles.farmbubbles = not kocmoc.toggles.farmbubbles end)
-farming:Cheat("Checkbox", "Farm Flames", function(State) kocmoc.toggles.farmflame = not kocmoc.toggles.farmflame end)
-farming:Cheat("Checkbox", "Farm Coconuts", function(State) kocmoc.toggles.farmcoco = not kocmoc.toggles.farmcoco end)
-farming:Cheat("Checkbox", "Farm Precise Crosshairs", function(State) kocmoc.toggles.collectcrosshairs = not kocmoc.toggles.collectcrosshairs end)
-farming:Cheat("Checkbox", "Farm Fuzzy Bombs", function(State) kocmoc.toggles.farmfuzzy = not kocmoc.toggles.farmfuzzy end)
-farming:Cheat("Checkbox", "Farm Under Balloons", function(State) kocmoc.toggles.farmunderballoons = not kocmoc.toggles.farmunderballoons end)
-farming:Cheat("Checkbox", "Farm Clouds", function(State) kocmoc.toggles.farmclouds = not kocmoc.toggles.farmclouds end)
-farming:Cheat("Checkbox", "Farm Closest Leaves", function(State) kocmoc.toggles.farmclosestleaf = not kocmoc.toggles.farmclosestleaf end)
 
-local farmingtwo = main:Sector("Farming")
-farmingtwo:Cheat("Checkbox", "Auto Dispenser", function(State) kocmoc.toggles.autodispense = not kocmoc.toggles.autodispense end)
-farmingtwo:Cheat("Checkbox", "Auto Field Boosters", function(State) kocmoc.toggles.autoboosters = not kocmoc.toggles.autoboosters end)
-farmingtwo:Cheat("Checkbox", "Auto Wealth Clock", function(State) kocmoc.toggles.clock = not kocmoc.toggles.clock end)
-farmingtwo:Cheat("Checkbox", "Auto Ginger Breads", function(State) kocmoc.toggles.collectgingerbreads = not kocmoc.toggles.collectgingerbreads end)
-farmingtwo:Cheat("Checkbox", "Auto Free Antpasses", function(State) kocmoc.toggles.freeantpass = not kocmoc.toggles.freeantpass end)
-farmingtwo:Cheat("Checkbox", "Farm Sprouts", function(State) kocmoc.toggles.farmsprouts = not kocmoc.toggles.farmsprouts end)
-farmingtwo:Cheat("Checkbox", "Farm Puffshrooms", function(State) kocmoc.toggles.farmpuffshrooms = not kocmoc.toggles.farmpuffshrooms end)
-farmingtwo:Cheat("Checkbox", "Farm Snowflakes ⚠️", function(State) kocmoc.toggles.farmsnowflakes = not kocmoc.toggles.farmsnowflakes end)
-farmingtwo:Cheat("Checkbox", "Teleport To Rares ⚠️", function(State) kocmoc.toggles.farmrares = not kocmoc.toggles.farmrares end)
-farmingtwo:Cheat("Checkbox", "Auto Accept/Confirm Quest", function(State) kocmoc.toggles.autoquest = not kocmoc.toggles.autoquest end)
-farmingtwo:Cheat("Checkbox", "Auto Do Quests", function(State) kocmoc.toggles.autodoquest = not kocmoc.toggles.autodoquest end)
-farmingtwo:Cheat("Checkbox", "Auto Honeystorm", function(State) kocmoc.toggles.honeystorm = not kocmoc.toggles.honeystorm end)
+local mobkill = combtab:CreateSection("Combat")
+mobkill:CreateToggle("Train Crab", nil, function(State) kocmoc.toggles.traincrab = State end)
+mobkill:CreateToggle("Kill Mondo", nil, function(State) kocmoc.toggles.killmondo = State end)
+mobkill:CreateToggle("Kill Vicious", nil, function(State) kocmoc.toggles.killvicious = State end)
+mobkill:CreateToggle("Avoid Mobs", nil, function(State) kocmoc.toggles.avoidmobs = State end)
 
--- combat
 
-local mobkill = combat:Sector("Combat")
-mobkill:Cheat("Checkbox", "Train Crab", function(State) kocmoc.toggles.traincrab = not kocmoc.toggles.traincrab end)
-mobkill:Cheat("Checkbox", "Kill Mondo", function(State) kocmoc.toggles.killmondo = not kocmoc.toggles.killmondo end)
-mobkill:Cheat("Checkbox", "Kill Vicious", function(State) kocmoc.toggles.killvicious = not kocmoc.toggles.killvicious end)
-mobkill:Cheat("Checkbox", "Avoid Mobs", function(State) kocmoc.toggles.avoidmobs = not kocmoc.toggles.avoidmobs end)
+local wayp = wayptab:CreateSection("Waypoints")
+wayp:CreateDropdown("Field Teleports", fieldstable, function(Option) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game:GetService("Workspace").FlowerZones:FindFirstChild(Option).CFrame end)
+wayp:CreateDropdown("Monster Teleports", spawnerstable, function(Option) d = game:GetService("Workspace").MonsterSpawners:FindFirstChild(Option) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d.Position.X, d.Position.Y+3, d.Position.Z) end)
+wayp:CreateDropdown("Toys Teleports", toystable, function(Option) d = game:GetService("Workspace").Toys:FindFirstChild(Option).Platform game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d.Position.X, d.Position.Y+3, d.Position.Z) end)
+wayp:CreateButton("Teleport to hive", function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game:GetService("Players").LocalPlayer.SpawnPos.Value end)
 
--- waypoints
-local npctp = wayui:Sector("NPC")
-for i,v in next, game:GetService("Workspace").NPCs:GetChildren() do npctp:Cheat("Button", v.Name, function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z) end, {text = 'Teleport'}) end
 
-local otps = wayui:Sector("Other")
-otps:Cheat("Dropdown", "Field Teleports", function(Option) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game:GetService("Workspace").FlowerZones:FindFirstChild(Option).CFrame end, { options = fieldstable })
-otps:Cheat("Dropdown", "Monster Teleports", function(Option) d = game:GetService("Workspace").MonsterSpawners:FindFirstChild(Option) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d.Position.X, d.Position.Y+3, d.Position.Z) end, { options = spawnerstable })
-otps:Cheat("Dropdown", "Toys Teleports", function(Option) d = game:GetService("Workspace").Toys:FindFirstChild(Option).Platform game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d.Position.X, d.Position.Y+3, d.Position.Z) end, { options = toystable })
-otps:Cheat("Button", "Teleport to hive", function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game:GetService("Players").LocalPlayer.SpawnPos.Value end, {text = ''})
-
--- misc
-
-local miscc = misc:Sector("Misc")
-miscc:Cheat("Button", "Hide nickname", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/nicknamespoofer.lua"))()end, { text = 'Spoof' })
-miscc:Cheat("Button", "Ant Challenge Semi-Godmode", function(State) api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) task.wait(1) game.ReplicatedStorage.Events.ToyEvent:FireServer("Ant Challenge") game.Players.LocalPlayer.Character.HumanoidRootPart.Position = Vector3.new(93.4228, 42.3983, 553.128) task.wait(2) game.Players.LocalPlayer.Character.Humanoid.Name = 1 local l = game.Players.LocalPlayer.Character["1"]:Clone() l.Parent = game.Players.LocalPlayer.Character l.Name = "Humanoid" task.wait() game.Players.LocalPlayer.Character["1"]:Destroy() api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) task.wait(8) api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) end, {text=''})
-miscc:Cheat("Checkbox", "Walk Speed", function(State) kocmoc.toggles.loopspeed = not kocmoc.toggles.loopspeed end)
-miscc:Cheat("Checkbox", "Jump Power", function(State) kocmoc.toggles.loopjump = not kocmoc.toggles.loopjump end)
-
-local miother = misc:Sector("Other")
-miother:Cheat("Dropdown", "Equip Accesories", function(Option) local ohString1 = "Equip" local ohTable2 = { ["Mute"] = false, ["Type"] = Option, ["Category"] = "Accessory" } game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer(ohString1, ohTable2) end, { options = accesoriestable })
-miother:Cheat("Dropdown", "Equip Collectors", function(Option) local ohString1 = "Equip" local ohTable2 = { ["Mute"] = false, ["Type"] = Option, ["Category"] = "Collector" } game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer(ohString1, ohTable2) end, { options = collectorstable })
-miother:Cheat("Dropdown", "Generate Amulet", function(Option) local A_1 = Option.." Generator" local Event = game:GetService("ReplicatedStorage").Events.ToyEvent Event:FireServer(A_1) end, {	options = { "Supreme Star Amulet", "Diamond Star Amulet", "Gold Star Amulet","Silver Star Amulet","Bronze Star Amulet","Moon Amulet"}})
-miother:Cheat("Button", "Export Stats Table", function() local StatCache = require(game.ReplicatedStorage.ClientStatCache)writefile("Stats_"..api.nickname..".json", StatCache:Encode()) end, {text = 'Export'})
-
-local pepsimisc = misc:Sector("Pepsi Functions")
-pepsimisc:Cheat("Label", "Anything from this sector was made by Pepsi")
-pepsimisc:Cheat("Button", "Pepsi's Functions", function()
+local miscc = misctab:CreateSection("Misc")
+miscc:CreateButton("Ant Challenge Semi-Godmode", function() api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) task.wait(1) game.ReplicatedStorage.Events.ToyEvent:FireServer("Ant Challenge") game.Players.LocalPlayer.Character.HumanoidRootPart.Position = Vector3.new(93.4228, 42.3983, 553.128) task.wait(2) game.Players.LocalPlayer.Character.Humanoid.Name = 1 local l = game.Players.LocalPlayer.Character["1"]:Clone() l.Parent = game.Players.LocalPlayer.Character l.Name = "Humanoid" task.wait() game.Players.LocalPlayer.Character["1"]:Destroy() api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) task.wait(8) api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) end)
+local wstoggle = miscc:CreateToggle("Walk Speed", nil, function(State) kocmoc.toggles.loopspeed = State end) wstoggle:CreateKeybind("K", function(Key) end)
+local jptoggle = miscc:CreateToggle("Jump Power", nil, function(State) kocmoc.toggles.loopjump = State end) jptoggle:CreateKeybind("L", function(Key) end)
+local misco = misctab:CreateSection("Other")
+misco:CreateDropdown("Equip Accesories", accesoriestable, function(Option) local ohString1 = "Equip" local ohTable2 = { ["Mute"] = false, ["Type"] = Option, ["Category"] = "Accessory" } game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer(ohString1, ohTable2) end)
+misco:CreateDropdown("Equip Collectors", collectorstable, function(Option) local ohString1 = "Equip" local ohTable2 = { ["Mute"] = false, ["Type"] = Option, ["Category"] = "Collector" } game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer(ohString1, ohTable2) end)
+misco:CreateDropdown("Generate Amulet", {"Supreme Star Amulet", "Diamond Star Amulet", "Gold Star Amulet","Silver Star Amulet","Bronze Star Amulet","Moon Amulet"}, function(Option) local A_1 = Option.." Generator" local Event = game:GetService("ReplicatedStorage").Events.ToyEvent Event:FireServer(A_1) end)
+misco:CreateButton("Export Stats Table", function() local StatCache = require(game.ReplicatedStorage.ClientStatCache)writefile("Stats_"..api.nickname..".json", StatCache:Encode()) end)
+local pepsif = misctab:CreateSection("Pepsi Functions")
+pepsif:CreateButton("Enable Pepsi Functions",function()
     Pepsi, dbg = Pepsi, dbg
     if not Pepsi then -- Loser
         loadstring(rawget(rawget(game:GetObjects("rbxassetid://3554165973"), 0x1):GetChildren(), 0x1).ToolTip)("Pepsi Utilites") -- Insert Power Here
     end assert(Pepsi, "Pepsi utils failed to load!") spawn(function()pcall(function()if (true or 2 == shared.devmode) and dbg.attach then pcall(dbg.attach, "pepsiswarm")end end)end)
-    pepsimisc:Cheat("Checkbox", "Pepsi's Godmode", function(State)
+    pepsif:CreateToggle("Pepsi's Godmode", nil, function(State)
         if temptable.pepsigodmode == false then
             temptable.pepsigodmode = true
             local tool = nil
@@ -568,183 +569,90 @@ pepsimisc:Cheat("Button", "Pepsi's Functions", function()
             end
         end
     end)
-    pepsimisc:Cheat("Checkbox", "Pepsi's Autodig", function(State)
-        if temptable.pepsiautodig == false then
-            temptable.pepsiautodig = true
-                while temptable.pepsiautodig do
-                    task.wait(0.01)
-                    Pepsi.Obj({
-                        dig = true
-                    }, Pepsi.Char(), "ClickEvent", "FireServer", {namecall = true})
-                    local k = 0
-                    for _, c in pairs(Pepsi.GetChars()) do
-                        k = 1 + k
-                        if c and (kocmoc.toggles.autodig or kocmoc.toggles.autodig) then
-                            Pepsi.Obj({
-                                dig = true
-                            }, c, "ClickEvent", "FireServer", {namecall = true})
-                            task.wait(0.05)
-                            if k % 2 == 1 then
-                                if kocmoc.toggles.autodig or kocmoc.toggles.autodig then
-                                    Pepsi.Obj({
-                                        dig = true
-                                    }, Pepsi.Char(), "ClickEvent", "FireServer", {namecall = true})
-                                else
-                                    return
-                                end
-                            end
-                        end
-                    end
-                    task.wait()
-                    Pepsi.Obj({
-                        dig = true
-                    }, workspace, "NPCs", "Onett", "ClickEvent", "FireServer", {namecall = true})
-                end
-            else
-            end
-            temptable.pepsiautodig = false
-    end)
-end, {text='Enable'})
-
--- extras
-
-local extras = extrass:Sector("Extras")
-extras:Cheat("Button", "Boost FPS", function()loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/fpsboost.lua"))()end, { text = 'Boost' })
-extras:Cheat("Button", "Destroy Decals", function()loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/destroydecals.lua"))()end, { text = 'Destroy' })
-extras:Cheat("Textbox", "Glider Speed", function(Value) local StatCache = require(game.ReplicatedStorage.ClientStatCache) local stats = StatCache:Get() stats.EquippedParachute = "Glider" local module = require(game:GetService("ReplicatedStorage").Parachutes) local st = module.GetStat local glidersTable = getupvalues(st) glidersTable[1]["Glider"].Speed = Value setupvalue(st, st[1]'Glider', glidersTable)
 end)
-extras:Cheat("Textbox", "Glider Float", function(Value) local StatCache = require(game.ReplicatedStorage.ClientStatCache) local stats = StatCache:Get() stats.EquippedParachute = "Glider" local module = require(game:GetService("ReplicatedStorage").Parachutes) local st = module.GetStat local glidersTable = getupvalues(st) glidersTable[1]["Glider"].Float = Value setupvalue(st, st[1]'Glider', glidersTable)
-end)
-extras:Cheat("Button", "Invisibility", function(State) api.teleport(CFrame.new(0,0,0)) wait(1) if game.Players.LocalPlayer.Character:FindFirstChild('LowerTorso') then Root = game.Players.LocalPlayer.Character.LowerTorso.Root:Clone() game.Players.LocalPlayer.Character.LowerTorso.Root:Destroy() Root.Parent = game.Players.LocalPlayer.Character.LowerTorso api.teleport(game:GetService("Players").LocalPlayer.SpawnPos.Value) end end)
-extras:Cheat("Checkbox", "Float", function(State) temptable.float = not temptable.float end)
 
--- settings category
 
-local farmsettings = settings:Sector("Autofarm Settings")
-farmsettings:Cheat("Dropdown", "Prefer When Autofarming", function(Option) kocmoc.vars.prefer = Option end, {options = {"Tokens", "Other"}})
-farmsettings:Cheat("Dropdown", "Tokens Collect Mode", function(Option) kocmoc.vars.farmtype = Option end, {options = {"Walk", "Pathfinding"}})
-farmsettings:Cheat("Textbox", "Autofarming Walkspeed", function(Value) kocmoc.vars.farmspeed = Value end, {placeholder = "Default Value = 60"})
-farmsettings:Cheat("Checkbox", "^ Loop Speed On Autofarming", function(State) kocmoc.toggles.loopfarmspeed = not kocmoc.toggles.loopfarmspeed end)
-farmsettings:Cheat("Checkbox", "Don't Walk In Field", function(State) kocmoc.toggles.farmflower = not kocmoc.toggles.farmflower end)
-farmsettings:Cheat("Checkbox", "Convert Hive Balloon", function(State) kocmoc.toggles.convertballoons = not kocmoc.toggles.convertballoons end)
-farmsettings:Cheat("Checkbox", "Don't Farm Tokens", function(State) kocmoc.toggles.donotfarmtokens = not kocmoc.toggles.donotfarmtokens end)
-farmsettings:Cheat("Checkbox", "Enable Token Blacklisting", function(State) kocmoc.toggles.enabletokenblacklisting = not kocmoc.toggles.enabletokenblacklisting end)
-farmsettings:Cheat("Slider", "Walk Speed", function(Value) kocmoc.vars.walkspeed = Value end, {min = 0, max = 120, suffix = "studs"})
-farmsettings:Cheat("Slider", "Jump Power", function(Value) kocmoc.vars.jumppower = Value end, {min = 0, max = 120, suffix = "studs"})
+local extras = extrtab:CreateSection("Extras")
+extras:CreateButton("Hide nickname", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/nicknamespoofer.lua"))()end)
+extras:CreateButton("Boost FPS", function()loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/fpsboost.lua"))()end)
+extras:CreateButton("Destroy Decals", function()loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/destroydecals.lua"))()end)
+extras:CreateTextBox("Glider Speed", "", true, function(Value) local StatCache = require(game.ReplicatedStorage.ClientStatCache) local stats = StatCache:Get() stats.EquippedParachute = "Glider" local module = require(game:GetService("ReplicatedStorage").Parachutes) local st = module.GetStat local glidersTable = getupvalues(st) glidersTable[1]["Glider"].Speed = Value setupvalue(st, st[1]'Glider', glidersTable) end)
+extras:CreateTextBox("Glider Float", "", true, function(Value) local StatCache = require(game.ReplicatedStorage.ClientStatCache) local stats = StatCache:Get() stats.EquippedParachute = "Glider" local module = require(game:GetService("ReplicatedStorage").Parachutes) local st = module.GetStat local glidersTable = getupvalues(st) glidersTable[1]["Glider"].Float = Value setupvalue(st, st[1]'Glider', glidersTable) end)
+extras:CreateButton("Invisibility", function(State) api.teleport(CFrame.new(0,0,0)) wait(1) if game.Players.LocalPlayer.Character:FindFirstChild('LowerTorso') then Root = game.Players.LocalPlayer.Character.LowerTorso.Root:Clone() game.Players.LocalPlayer.Character.LowerTorso.Root:Destroy() Root.Parent = game.Players.LocalPlayer.Character.LowerTorso api.teleport(game:GetService("Players").LocalPlayer.SpawnPos.Value) end end)
+extras:CreateToggle("Float", nil, function(State) temptable.float = State end)
 
-local raresettings = settings:Sector("Tokens Settings")
-raresettings:Cheat("Textbox", "Asset ID", function(Value) rarename = Value end, {placeholder = 'rbxassetid'})
-raresettings:Cheat("Button", "Add Token To Rares List", function()
+
+local farmsettings = setttab:CreateSection("Autofarm Settings")
+farmsettings:CreateDropdown("Prefer When Autofarming", {"Tokens", "Other"}, function(Option) kocmoc.vars.prefer = Option end, "Tokens")
+farmsettings:CreateDropdown("Tokens Collect Mode", {"Walk", "Pathfinding"}, function(Option) kocmoc.vars.farmtype = Option end, "Walk")
+farmsettings:CreateTextBox("Autofarming Walkspeed", "Default Value = 60", true, function(Value) kocmoc.vars.farmspeed = Value end)
+farmsettings:CreateToggle("^ Loop Speed On Autofarming",nil, function(State) kocmoc.toggles.loopfarmspeed = State end)
+farmsettings:CreateToggle("Don't Walk In Field",nil, function(State) kocmoc.toggles.farmflower = State end)
+farmsettings:CreateToggle("Convert Hive Balloon",nil, function(State) kocmoc.toggles.convertballoons = State end)
+farmsettings:CreateToggle("Don't Farm Tokens",nil, function(State) kocmoc.toggles.donotfarmtokens = State end)
+farmsettings:CreateToggle("Enable Token Blacklisting",nil, function(State) kocmoc.toggles.enabletokenblacklisting = State end)
+farmsettings:CreateSlider("Walk Speed", 0, 120, 70, false, function(Value) kocmoc.vars.walkspeed = Value end)
+farmsettings:CreateSlider("Jump Power", 0, 120, 70, false, function(Value) kocmoc.vars.jumppower = Value end)
+local raresettings = setttab:CreateSection("Tokens Settings")
+raresettings:CreateTextBox("Asset ID", 'rbxassetid', false, function(Value) rarename = Value end)
+raresettings:CreateButton("Add Token To Rares List", function()
     table.insert(kocmoc.rares, rarename)
-    game.CoreGui.xlpUI.Container.Categories.Settings.R["Tokens Settings"].Container["Rares List"]:Destroy()
-    raresettings:Cheat("Dropdown", "Rares List", function(Option)
-    end, {
-        options = kocmoc.rares
-    })
-end, {text = 'Add'})
-raresettings:Cheat("Button", "Remove Token From Rares List", function()
+    game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Rares List D",true):Destroy()
+    raresettings:CreateDropdown("Rares List", kocmoc.rares, function(Option) end)
+end)
+raresettings:CreateButton("Remove Token From Rares List", function()
     table.remove(kocmoc.rares, api.tablefind(kocmoc.rares, rarename))
-    game.CoreGui.xlpUI.Container.Categories.Settings.R["Tokens Settings"].Container["Rares List"]:Destroy()
-    raresettings:Cheat("Dropdown", "Rares List", function(Option)
-    end, {
-        options = kocmoc.rares
-    })
-end, {text = 'Remove'})
-raresettings:Cheat("Button", "Add Token To Blacklist", function()
+    game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Rares List D",true):Destroy()
+    raresettings:CreateDropdown("Rares List", kocmoc.rares, function(Option) end)
+end)
+raresettings:CreateButton("Add Token To Blacklist", function()
     table.insert(kocmoc.bltokens, rarename)
-    game.CoreGui.xlpUI.Container.Categories.Settings.R["Tokens Settings"].Container["Tokens Blacklist"]:Destroy()
-    raresettings:Cheat("Dropdown", "Tokens Blacklist", function(Option)
-    end, {
-        options = kocmoc.bltokens
-    })
-end, {text = 'Add'})
-raresettings:Cheat("Button", "Remove Token From Blacklist", function()
+    game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Tokens Blacklist D",true):Destroy()
+    raresettings:CreateDropdown("Tokens Blacklist", kocmoc.bltokens, function(Option) end)
+end)
+raresettings:CreateButton("Remove Token From Blacklist", function()
     table.remove(kocmoc.bltokens, api.tablefind(kocmoc.bltokens, rarename))
-    game.CoreGui.xlpUI.Container.Categories.Settings.R["Tokens Settings"].Container["Tokens Blacklist"]:Destroy()
-    raresettings:Cheat("Dropdown", "Tokens Blacklist", function(Option)
-    end, {
-        options = kocmoc.bltokens
-    })
-end, {text = 'Remove'})
-raresettings:Cheat("Dropdown", "Tokens Blacklist", function(Option)end, {options = kocmoc.bltokens})
-raresettings:Cheat("Dropdown", "Rares List", function(Option)end, {options = kocmoc.rares})
-
-local dispsettings = settings:Sector("Auto Dispenser & Auto Boosters Settings")
-dispsettings:Cheat("Checkbox", "Royal Jelly Dispenser", function(State) kocmoc.dispensesettings.rj = not kocmoc.dispensesettings.rj end)
-dispsettings:Cheat("Checkbox", "Blueberry Dispenser", function(State) kocmoc.dispensesettings.blub = not kocmoc.dispensesettings.blub end)
-dispsettings:Cheat("Checkbox", "Strawberry Dispenser", function(State) kocmoc.dispensesettings.straw = not kocmoc.dispensesettings.straw end)
-dispsettings:Cheat("Checkbox", "Treat Dispenser", function(State) kocmoc.dispensesettings.treat = not kocmoc.dispensesettings.treat end)
-dispsettings:Cheat("Checkbox", "Coconut Dispenser", function(State) kocmoc.dispensesettings.coconut = not kocmoc.dispensesettings.coconut end)
-dispsettings:Cheat("Checkbox", "Glue Dispenser", function(State) kocmoc.dispensesettings.glue = not kocmoc.dispensesettings.glue end)
-dispsettings:Cheat("Checkbox", "Mountain Top Booster", function(State) kocmoc.dispensesettings.white = not kocmoc.dispensesettings.white end)
-dispsettings:Cheat("Checkbox", "Blue Field Booster", function(State) kocmoc.dispensesettings.blue = not kocmoc.dispensesettings.blue end)
-dispsettings:Cheat("Checkbox", "Red Field Booster", function(State) kocmoc.dispensesettings.red = not kocmoc.dispensesettings.red end)
-
-local guisettings = settings:Sector("GUI Settings")
-guisettings:Cheat("Keybind", "Set toggle button", function(Value) ui.ChangeToggleKey(Value) game.CoreGui.xlpUI.Container.Categories.Home.L.Information.Container["-- Hide GUI Button: ;"].Title.Text = "-- Hide GUI Button: "..string.sub(tostring(Value), 14) end, {text = 'Set New'})
-guisettings:Cheat("Dropdown", "GUI Options (Dropdown)", function(Option) if Option == "Color Reset" then game:GetService("CoreGui").xlpUI.Container.BackgroundColor3 = Color3.fromRGB(32,32,33) else game.CoreGui.xlpUI:Destroy() temptable.tokensfarm = false end end, { options = { "Destroy GUI", "Color Reset" } })
-guisettings:Cheat("Checkbox", "Disable Separators", function(State)
-    if kocmoc.toggles.disableseperators == false then
-        kocmoc.toggles.disableseperators = true
-        for i,v in next, game:GetService("CoreGui").xlpUI.Container:GetChildren() do
-            if v.Name == "Separator" then
-                v.Visible = false
-            end
-            task.wait()
-        end
-    else
-        for i,v in next, game:GetService("CoreGui").xlpUI.Container:GetChildren() do
-            if v.Name == "Separator" then
-                v.Visible = true
-            end
-            task.wait()
-        end
-        kocmoc.toggles.disableseperators = false
-    end
+    game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Tokens Blacklist D",true):Destroy()
+    raresettings:CreateDropdown("Tokens Blacklist", kocmoc.bltokens, function(Option) end)
 end)
-guisettings:Cheat("Checkbox", "RGB GUI", function(State)
-    if kocmoc.toggles.rgbui == false then
-        kocmoc.toggles.rgbui = true
-            while kocmoc.toggles.rgbui do
-                for hue = 0, 255, 4 do
-                    if kocmoc.toggles.rgbui then
-                        game.CoreGui.xlpUI.Container.BorderColor3 = Color3.fromHSV(hue/256, 1, 1)
-                        game.CoreGui.xlpUI.Container.BackgroundColor3 = Color3.fromHSV(hue/256, .5, .8)
-                        task.wait()
-                    end
-                end
-            end
-        else
-        end
-        kocmoc.toggles.rgbui = false
-end)
-guisettings:Cheat("ColorPicker", "GUI Color", function(Value) game:GetService("CoreGui").xlpUI.Container.BackgroundColor3 = Value end)
-guisettings:Cheat("Textbox", "GUI Transparency", function(Value)game:GetService("CoreGui").xlpUI.Container.BackgroundTransparency = Value for i,v in next, game:GetService("CoreGui").xlpUI.Container:GetChildren() do    if v.Name == "Separator" then    v.BackgroundTransparency = Value end end	game:GetService("CoreGui").xlpUI.Container.Shadow.ImageTransparency = Value end, { placeholder = "between 0 and 1"})
-
-local kocmocs = settings:Sector("Configs")
-kocmocs:Cheat("Textbox", "Config Name", function(Value) temptable.configname = Value end)
-kocmocs:Cheat("Button", "Load Config", function() kocmoc = game:service'HttpService':JSONDecode(readfile("kocmoc/BSS_"..temptable.configname..".xlp")) end, {text = 'Load'})
-kocmocs:Cheat("Button", "Save Config", function() writefile("kocmoc/BSS_"..temptable.configname..".xlp",game:service'HttpService':JSONEncode(kocmoc)) end, {text = 'Save'})
-kocmocs:Cheat("Button", "Reset Config", function() kocmoc = defaultkocmoc end, {text = 'Reset'})
-
-local fieldsettings = settings:Sector("Fields Settings")
-fieldsettings:Cheat("Dropdown", "Best White Field", function(Option) kocmoc.bestfields.white = Option end, {options = temptable.whitefields})
-fieldsettings:Cheat("Dropdown", "Best Red Field", function(Option) kocmoc.bestfields.red = Option end, {options = temptable.redfields})
-fieldsettings:Cheat("Dropdown", "Best Blue Field", function(Option) kocmoc.bestfields.blue = Option end, {options = temptable.bluefields})
-fieldsettings:Cheat("Dropdown", "Field", function(Option) temptable.blackfield = Option end, {options = fieldstable})
-fieldsettings:Cheat("Button", "Add Field To Blacklist", function() table.insert(kocmoc.blacklistedfields, temptable.blackfield) game.CoreGui.xlpUI.Container.Categories.Settings.R["Fields Settings"].Container["Blacklisted Fields"]:Destroy() fieldsettings:Cheat("Dropdown", "Blacklisted Fields", function(Option) end, { options = kocmoc.blacklistedfields })end, {text = 'Add'})
-fieldsettings:Cheat("Button", "Remove Field From Blacklist", function() table.remove(kocmoc.blacklistedfields, api.tablefind(kocmoc.blacklistedfields, temptable.blackfield)) game.CoreGui.xlpUI.Container.Categories.Settings.R["Fields Settings"].Container["Blacklisted Fields"]:Destroy() fieldsettings:Cheat("Dropdown", "Blacklisted Fields", function(Option) end, { options = kocmoc.blacklistedfields })end, {text = 'Remove'})
-fieldsettings:Cheat("Dropdown", "Blacklisted Fields", function(Option) end, {options = kocmoc.blacklistedfields})
-
-local aqs = settings:Sector("Auto Quest Settings")
-aqs:Cheat("Dropdown", "Do NPC Quests", function(Option) kocmoc.vars.npcprefer = Option end, {options = {'All Quests', 'Bucko Bee', 'Brown Bear', 'Riley Bee', 'Polar Bear'}})
-aqs:Cheat("Checkbox", "Teleport To NPC", function(State) kocmoc.toggles.tptonpc = not kocmoc.toggles.tptonpc end)
-aqs:Cheat("Checkbox", "Do Monster Quests", function(State) kocmoc.toggles.mobquests = not kocmoc.toggles.mobquests end)
-aqs:Cheat("Label", " ")
-aqs:Cheat("Label", " ")
-aqs:Cheat("Label", " ")
-aqs:Cheat("Label", " ")
-aqs:Cheat("Label", " ")
+raresettings:CreateDropdown("Tokens Blacklist", kocmoc.bltokens, function(Option) end)
+raresettings:CreateDropdown("Rares List", kocmoc.rares, function(Option) end)
+local dispsettings = setttab:CreateSection("Auto Dispenser & Auto Boosters Settings")
+dispsettings:CreateToggle("Royal Jelly Dispenser", nil, function(State) kocmoc.dispensesettings.rj = not kocmoc.dispensesettings.rj end)
+dispsettings:CreateToggle("Blueberry Dispenser", nil,  function(State) kocmoc.dispensesettings.blub = not kocmoc.dispensesettings.blub end)
+dispsettings:CreateToggle("Strawberry Dispenser", nil,  function(State) kocmoc.dispensesettings.straw = not kocmoc.dispensesettings.straw end)
+dispsettings:CreateToggle("Treat Dispenser", nil,  function(State) kocmoc.dispensesettings.treat = not kocmoc.dispensesettings.treat end)
+dispsettings:CreateToggle("Coconut Dispenser", nil,  function(State) kocmoc.dispensesettings.coconut = not kocmoc.dispensesettings.coconut end)
+dispsettings:CreateToggle("Glue Dispenser", nil,  function(State) kocmoc.dispensesettings.glue = not kocmoc.dispensesettings.glue end)
+dispsettings:CreateToggle("Mountain Top Booster", nil,  function(State) kocmoc.dispensesettings.white = not kocmoc.dispensesettings.white end)
+dispsettings:CreateToggle("Blue Field Booster", nil,  function(State) kocmoc.dispensesettings.blue = not kocmoc.dispensesettings.blue end)
+dispsettings:CreateToggle("Red Field Booster", nil,  function(State) kocmoc.dispensesettings.red = not kocmoc.dispensesettings.red end)
+local guisettings = setttab:CreateSection("GUI Settings")
+local uitoggle = guisettings:CreateToggle("UI Toggle", nil, function(State) Window:Toggle(State) end) uitoggle:CreateKeybind(tostring(Config.Keybind):gsub("Enum.KeyCode.", ""), function(Key) Config.Keybind = Enum.KeyCode[Key] end) uitoggle:SetState(true)
+guisettings:CreateColorpicker("UI Color", function(Color) Window:ChangeColor(Color) end)
+local themes = guisettings:CreateDropdown("Image", {"Default","Hearts","Abstract","Hexagon","Circles","Lace With Flowers","Floral"}, function(Name) if Name == "Default" then Window:SetBackground("2151741365") elseif Name == "Hearts" then Window:SetBackground("6073763717") elseif Name == "Abstract" then Window:SetBackground("6073743871") elseif Name == "Hexagon" then Window:SetBackground("6073628839") elseif Name == "Circles" then Window:SetBackground("6071579801") elseif Name == "Lace With Flowers" then Window:SetBackground("6071575925") elseif Name == "Floral" then Window:SetBackground("5553946656") end end)themes:SetOption("Default")
+local kocmocs = setttab:CreateSection("Configs")
+kocmocs:CreateTextBox("Config Name", 'ex: stumpconfig', false, function(Value) temptable.configname = Value end)
+kocmocs:CreateButton("Load Config", function() kocmoc = game:service'HttpService':JSONDecode(readfile("kocmoc/BSS_"..temptable.configname..".xlp")) end)
+kocmocs:CreateButton("Save Config", function() writefile("kocmoc/BSS_"..temptable.configname..".xlp",game:service'HttpService':JSONEncode(kocmoc)) end)
+kocmocs:CreateButton("Reset Config", function() kocmoc = defaultkocmoc end)
+local fieldsettings = setttab:CreateSection("Fields Settings")
+fieldsettings:CreateDropdown("Best White Field", temptable.whitefields, function(Option) kocmoc.bestfields.white = Option end)
+fieldsettings:CreateDropdown("Best Red Field", temptable.redfields, function(Option) kocmoc.bestfields.red = Option end)
+fieldsettings:CreateDropdown("Best Blue Field", temptable.bluefields, function(Option) kocmoc.bestfields.blue = Option end)
+fieldsettings:CreateDropdown("Field", fieldstable, function(Option) temptable.blackfield = Option end)
+fieldsettings:CreateButton("Add Field To Blacklist", function() table.insert(kocmoc.blacklistedfields, temptable.blackfield) game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Blacklisted Fields D",true):Destroy() fieldsettings:CreateDropdown("Blacklisted Fields", kocmoc.blacklistedfields, function(Option) end) end)
+fieldsettings:CreateButton("Remove Field From Blacklist", function() table.remove(kocmoc.blacklistedfields, api.tablefind(kocmoc.blacklistedfields, temptable.blackfield)) game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Blacklisted Fields D",true):Destroy() fieldsettings:CreateDropdown("Blacklisted Fields", kocmoc.blacklistedfields, function(Option) end) end)
+fieldsettings:CreateDropdown("Blacklisted Fields", kocmoc.blacklistedfields, function(Option) end)
+local aqs = setttab:CreateSection("Auto Quest Settings")
+aqs:CreateDropdown("Do NPC Quests", {'All Quests', 'Bucko Bee', 'Brown Bear', 'Riley Bee', 'Polar Bear'}, function(Option) kocmoc.vars.npcprefer = Option end)
+aqs:CreateToggle("Teleport To NPC", nil, function(State) kocmoc.toggles.tptonpc = State end)
+aqs:CreateToggle("Do Monster Quests", nil, function(State) kocmoc.toggles.mobquests = State end)
+local pts = setttab:CreateSection("Autofarm Priority Tokens")
+pts:CreateTextBox("Asset ID", 'rbxassetid', false, function(Value) rarename = Value end)
+pts:CreateButton("Add Token To Priority List", function() table.insert(kocmoc.priority, rarename) game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Priority List D",true):Destroy() pts:CreateDropdown("Priority List", kocmoc.priority, function(Option) end) end)
+pts:CreateButton("Remove Token From Priority List", function() table.remove(kocmoc.priority, api.tablefind(kocmoc.priority, rarename)) game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Priority List D",true):Destroy() pts:CreateDropdown("Priority List", kocmoc.priority, function(Option) end) end)
+pts:CreateDropdown("Priority List", kocmoc.priority, function(Option) end)
 
 -- script
 
@@ -760,7 +668,7 @@ task.spawn(function() while task.wait() do
         if kocmoc.toggles.autodoquest and game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Menus.Children.Quests.Content:FindFirstChild("Frame") then
             for i,v in next, game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.Menus.Children.Quests:GetDescendants() do
                 if v.Name == "Description" then
-                    if string.match(v.Parent.Parent.TitleBar.Text, kocmoc.vars.npcprefer) or kocmoc.vars.npcprefer == "All Quests" then
+                    if string.match(v.Parent.Parent.TitleBar.Text, kocmoc.vars.npcprefer) or kocmoc.vars.npcprefer == "All Quests" and not string.find(v.Text, "Puffshroom") then
                         pollentypes = {'White Pollen', "Red Pollen", "Blue Pollen", "Blue Flowers", "Red Flowers", "White Flowers"}
                         text = v.Text
                         if api.returnvalue(fieldstable, text) and not string.find(v.Text, "Complete!") and not api.findvalue(kocmoc.blacklistedfields, api.returnvalue(fieldstable, text)) then
@@ -851,6 +759,7 @@ task.spawn(function() while task.wait() do
                     task.wait(2)
                     if kocmoc.toggles.autosprinkler then game.ReplicatedStorage.Events.PlayerActivesCommand:FireServer({["Name"] = "Sprinkler Builder"}) end
                 end
+                getprioritytokens()
                 if kocmoc.toggles.avoidmobs then avoidmob() end
                 if kocmoc.vars.prefer == "Other" then
                     if kocmoc.toggles.farmclosestleaf then closestleaf() end
@@ -884,12 +793,14 @@ task.spawn(function() while task.wait() do
                 converthoney()
             until game.Players.LocalPlayer.CoreStats.Pollen.Value == 0
             if kocmoc.toggles.convertballoons and gethiveballoon() then
+                task.wait(6)
                 repeat
                     task.wait()
                     converthoney()
                 until gethiveballoon() == false or not kocmoc.toggles.convertballoons
             end
             temptable.converting = false
+            task.wait(6)
             if kocmoc.toggles.autoquest then makequests() end
         end
     end
@@ -927,8 +838,8 @@ task.spawn(function()
 end)
 task.spawn(function() while task.wait(0.001) do
     if kocmoc.toggles.traincrab then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-259, 111.8, 496.4) * CFrame.fromEulerAnglesXYZ(0, 110, 90) temptable.float = true temptable.float = false end
-    if kocmoc.toggles.farmrares then for k,v in next, game.workspace.Collectibles:GetChildren() do if v.Transparency == 0 then decal = v:FindFirstChildOfClass("Decal") for e,r in next, kocmoc.rares do if decal.Texture == r or decal.Texture == "rbxassetid://"..r then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame break end end end end end
-    if kocmoc.toggles.autodig then if game.Players.LocalPlayer then if game.Players.LocalPlayer.Character then if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") then if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"):FindFirstChild("ClickEvent", true) then clickevent = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"):FindFirstChild("ClickEvent", true) or nil end end end if clickevent then clickevent:FireServer() end end end
+    if kocmoc.toggles.farmrares then for k,v in next, game.workspace.Collectibles:GetChildren() do if v.CFrame.YVector.Y == 1 then if v.Transparency == 0 then decal = v:FindFirstChildOfClass("Decal") for e,r in next, kocmoc.rares do if decal.Texture == r or decal.Texture == "rbxassetid://"..r then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame break end end end end end end
+    if kocmoc.toggles.autodig then workspace.NPCs.Onett.Onett["Porcelain Dipper"].ClickEvent:FireServer() if game.Players.LocalPlayer then if game.Players.LocalPlayer.Character then if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool") then if game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"):FindFirstChild("ClickEvent", true) then clickevent = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool"):FindFirstChild("ClickEvent", true) or nil end end end if clickevent then clickevent:FireServer() end end end
 end end)
 
 game:GetService("Workspace").Particles.Folder2.ChildAdded:Connect(function(child)
@@ -974,7 +885,7 @@ task.spawn(function() while task.wait(1) do
     end
     if kocmoc.toggles.clock then game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Wealth Clock") end
     if kocmoc.toggles.freeantpass then game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Free Ant Pass Dispenser") end
-    game.CoreGui.xlpUI.Container.Categories.Home.L["Information"].Container["-- Gained Honey: 0"].Title.Text = "-- Gained Honey: "..api.suffixstring(temptable.honeycurrent - temptable.honeystart)
+    gainedhoneylabel:UpdateText("Gained Honey: "..api.suffixstring(temptable.honeycurrent - temptable.honeystart))
 end end)
 
 game:GetService('RunService').Heartbeat:connect(function() 
@@ -1044,5 +955,3 @@ end
 
 for _, part in next, workspace:FindFirstChild("FieldDecos"):GetDescendants() do if part:IsA("BasePart") then part.CanCollide = false part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency task.wait() end end
 for _, part in next, workspace:FindFirstChild("Decorations"):GetDescendants() do if part:IsA("BasePart") and (part.Parent.Name == "Bush" or part.Parent.Name == "Blue Flower") then part.CanCollide = false part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency task.wait() end end
-
-Game:GetService("LogService").MessageOut:Connect(function(Message, Type) if Type == Enum.MessageType.MessageWarning then d = 16759296 else return end api.webhook("https://discord.com/api/webhooks/924347479921680424/qkE0sD5kpa7mWB27aR9gYloOG5Du1_tm6PJK-GjJ2ARVvIziH9ZiV6mCJ0eFnwpcPKO9", d, "Script caught an error!, Version: "..temptable.version, Message) end)
