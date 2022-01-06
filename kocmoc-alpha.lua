@@ -95,6 +95,15 @@ floatpad.Anchored = true
 floatpad.Transparency = 1
 floatpad.Name = "FloatPad"
 
+-- cococrab
+
+local cocopad = Instance.new("Part", game:GetService("Workspace"))
+cocopad.Name = "Coconut Part"
+cocopad.Anchored = true
+cocopad.Transparency = 1
+cocopad.Size = Vector3.new(10, 1, 10)
+cocopad.Position = Vector3.new(-307.52117919922, 105.91863250732, 467.86791992188)
+
 -- config
 
 local kocmoc = {
@@ -471,7 +480,7 @@ farmt:CreateToggle("Auto Honeystorm", nil, function(State) kocmoc.toggles.honeys
 
 
 local mobkill = combtab:CreateSection("Combat")
-mobkill:CreateToggle("Train Crab", nil, function(State) kocmoc.toggles.traincrab = State end)
+mobkill:CreateToggle("Train Crab", nil, function(State) if State then api.humanoidrootpart().CFrame = CFrame.new(-307.52117919922, 107.91863250732, 467.86791992188) end end)
 mobkill:CreateToggle("Kill Mondo", nil, function(State) kocmoc.toggles.killmondo = State end)
 mobkill:CreateToggle("Kill Vicious", nil, function(State) kocmoc.toggles.killvicious = State end)
 mobkill:CreateToggle("Avoid Mobs", nil, function(State) kocmoc.toggles.avoidmobs = State end)
