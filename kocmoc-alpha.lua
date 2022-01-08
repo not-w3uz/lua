@@ -400,29 +400,24 @@ end
 
 function makequests()
     for i,v in next, game:GetService("Workspace").NPCs:GetChildren() do
-        if v.Name ~= "Ant Challenge Info" and v.Name ~= "Bubble Bee Man 2" and v.Name ~= "Wind Shrine" and v.Name ~= "Gummy Bear" then if v:FindFirstChild("Platform") then if v.Platform:FindFirstChild("AlertPos") then if v.Platform.AlertPos:FindFirstChild("AlertGui") then if v.Platform.AlertPos.AlertGui:FindFirstChild("ImageLabel") then
-            image = v.Platform.AlertPos.AlertGui.ImageLabel
-            button = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ActivateButton.MouseButton1Click
-            if image.ImageTransparency == 0 then
-                if kocmoc.toggles.tptonpc then
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z)
-                    task.wait(1)
-                else
-                    api.tween(2,CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z))
-                    task.wait(3)
-                end
+    if v.Name ~= "Ant Challenge Info" and v.Name ~= "Bubble Bee Man 2" and v.Name ~= "Wind Shrine" and v.Name ~= "Gummy Bear" and UDim2.new(0.5,0,0,-124) == game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ActivateButton.Position then 
+        if v:FindFirstChild("Platform") then 
+            if v.Platform.AlertPos.AlertGui.ImageLabel.ImageTransparency == 0 and v.Platform.Position ~= api.humanoidrootpart().Position then
+                local oof = v.Platform.CFrame
+                v.Platform.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.fromEulerAnglesXYZ(0,0,-1.5708)
+                v.Platform.CanCollide = false
+                v.Platform.Transparency = 1
+                task.wait(.1)
+                button = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ActivateButton.MouseButton1Click
                 for b,z in next, getconnections(button) do
                     z.Function()
                 end
-                task.wait(8)
-                if image.ImageTransparency == 0 then
-                    for b,z in next, getconnections(button) do
-                        z.Function()
-                    end
-                end
+                v.Platform.CFrame = oof
+                break
             end
-        end     
-    end end end end end
+        end 
+    end 
+end
 end
 
 local Config = { WindowName = "🌘  kocmoc | "..temptable.version, Color = Color3.fromRGB(164, 84, 255), Keybind = Enum.KeyCode.Semicolon}
@@ -443,7 +438,7 @@ information:CreateLabel("Place version: "..game.PlaceVersion)
 information:CreateLabel("⚠️ - Not Safe Function")
 information:CreateLabel("⚙ - Configurable Function")
 information:CreateLabel("Place version: "..game.PlaceVersion)
-information:CreateLabel("Script by weuz_ and davidshavrov")
+information:CreateLabel("Script by weuz_ and mrdevl")
 local gainedhoneylabel = information:CreateLabel("Gained Honey: 0")
 information:CreateButton("Discord Invite", function() setclipboard("https://discord.gg/9vG8UJXuNf") end)
 information:CreateButton("Donation", function() setclipboard("https://qiwi.com/n/W33UZ") end)
@@ -810,7 +805,6 @@ task.spawn(function() while task.wait() do
             end
             temptable.converting = false
             task.wait(6)
-            if kocmoc.toggles.autoquest then makequests() end
         end
     end
 end end end)
@@ -898,6 +892,7 @@ task.spawn(function() while task.wait(1) do
 end end)
 
 game:GetService('RunService').Heartbeat:connect(function() 
+    if not game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.NPC.Visible and kocmoc.toggles.autoquest then makequests() end
     if kocmoc.toggles.autoquest then firesignal(game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.NPC.ButtonOverlay.MouseButton1Click) end
     if kocmoc.toggles.loopspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.walkspeed end
     if kocmoc.toggles.loopjump then game.Players.LocalPlayer.Character.Humanoid.JumpPower = kocmoc.vars.jumppower end
