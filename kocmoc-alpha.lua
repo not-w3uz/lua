@@ -189,10 +189,16 @@ function statsget() local StatCache = require(game.ReplicatedStorage.ClientStatC
 function farm(trying)
     if temptable.started.mondo then
         if kocmoc.toggles.loopfarmspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed end
-        if kocmoc.vars.farmtype == "Walk" then api.walkTo(trying.Position) elseif kocmoc.vars.farmtype == "Pathfinding" then api.pathfind(trying.Position) end
+        api.humanoid():MoveTo(trying.Position)
+        local done = false 
+        api.humanoid().MoveToFinished:Connect(function() done=true end)
+        repeat task.wait() until done or not IsToken(trying)
     elseif (trying.Position-fieldposition).magnitude < 50 then
         if kocmoc.toggles.loopfarmspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed end
-        if kocmoc.vars.farmtype == "Walk" then api.walkTo(trying.Position) elseif kocmoc.vars.farmtype == "Pathfinding" then api.pathfind(trying.Position) end
+        api.humanoid():MoveTo(trying.Position)
+        local done = false 
+        api.humanoid().MoveToFinished:Connect(function() done=true end)
+        repeat task.wait() until done or not IsToken(trying)
     end
 end
 
@@ -228,18 +234,36 @@ end
 
 function gettoken()
     task.wait()
-    if temptable.running == false then
-        for e,r in next, game:GetService("Workspace").Collectibles:GetChildren() do
-            itb = false
-            if r:FindFirstChildOfClass("Decal") and kocmoc.toggles.enabletokenblacklisting then
-                if api.findvalue(kocmoc.bltokens, string.split(r:FindFirstChildOfClass("Decal").Texture, 'rbxassetid://')[2]) then
-                    itb = true
-                end
-            end
-            if tonumber((r.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude/1.4 and not itb and r.CFrame.YVector.Y == 1 then
-                farm(r)
+    for e,r in next, game:GetService("Workspace").Collectibles:GetChildren() do
+        itb = false
+        if r:FindFirstChildOfClass("Decal") and kocmoc.toggles.enabletokenblacklisting then
+            if api.findvalue(kocmoc.bltokens, string.split(r:FindFirstChildOfClass("Decal").Texture, 'rbxassetid://')[2]) then
+                itb = true
             end
         end
+        if tonumber((r.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= temptable.magnitude/1.4 and not itb then
+            farm(r)
+        end
+    end
+end
+
+function IsToken(token)
+    if not token then
+        return false
+    end
+    if not token.Parent then return false end
+    if token then
+        if token.Name == "C" then
+            if token.Orientation.Z ~= 0 then
+                return false
+            end
+            if not token:IsA("Part") then
+                return false
+            end
+        end
+        return true
+    else
+        return false
     end
 end
 
@@ -400,24 +424,29 @@ end
 
 function makequests()
     for i,v in next, game:GetService("Workspace").NPCs:GetChildren() do
-    if v.Name ~= "Ant Challenge Info" and v.Name ~= "Bubble Bee Man 2" and v.Name ~= "Wind Shrine" and v.Name ~= "Gummy Bear" and UDim2.new(0.5,0,0,-124) == game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ActivateButton.Position then 
-        if v:FindFirstChild("Platform") then 
-            if v.Platform.AlertPos.AlertGui.ImageLabel.ImageTransparency == 0 and v.Platform.Position ~= api.humanoidrootpart().Position then
-                local oof = v.Platform.CFrame
-                v.Platform.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.fromEulerAnglesXYZ(0,0,-1.5708)
-                v.Platform.CanCollide = false
-                v.Platform.Transparency = 1
-                task.wait(.1)
-                button = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ActivateButton.MouseButton1Click
+        if v.Name ~= "Ant Challenge Info" and v.Name ~= "Bubble Bee Man 2" and v.Name ~= "Wind Shrine" and v.Name ~= "Gummy Bear" then if v:FindFirstChild("Platform") then if v.Platform:FindFirstChild("AlertPos") then if v.Platform.AlertPos:FindFirstChild("AlertGui") then if v.Platform.AlertPos.AlertGui:FindFirstChild("ImageLabel") then
+            image = v.Platform.AlertPos.AlertGui.ImageLabel
+            button = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ActivateButton.MouseButton1Click
+            if image.ImageTransparency == 0 then
+                if kocmoc.toggles.tptonpc then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z)
+                    task.wait(1)
+                else
+                    api.tween(2,CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z))
+                    task.wait(3)
+                end
                 for b,z in next, getconnections(button) do
                     z.Function()
                 end
-                v.Platform.CFrame = oof
-                break
+                task.wait(8)
+                if image.ImageTransparency == 0 then
+                    for b,z in next, getconnections(button) do
+                        z.Function()
+                    end
+                end
             end
-        end 
-    end 
-end
+        end     
+    end end end end end
 end
 
 local Config = { WindowName = "🌘  kocmoc | "..temptable.version, Color = Color3.fromRGB(164, 84, 255), Keybind = Enum.KeyCode.Semicolon}
@@ -805,6 +834,7 @@ task.spawn(function() while task.wait() do
             end
             temptable.converting = false
             task.wait(6)
+            if kocmoc.toggles.autoquest then makequests() end
         end
     end
 end end end)
@@ -892,7 +922,6 @@ task.spawn(function() while task.wait(1) do
 end end)
 
 game:GetService('RunService').Heartbeat:connect(function() 
-    if not game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.NPC.Visible and kocmoc.toggles.autoquest then makequests() end
     if kocmoc.toggles.autoquest then firesignal(game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.NPC.ButtonOverlay.MouseButton1Click) end
     if kocmoc.toggles.loopspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.walkspeed end
     if kocmoc.toggles.loopjump then game.Players.LocalPlayer.Character.Humanoid.JumpPower = kocmoc.vars.jumppower end
@@ -909,17 +938,6 @@ end)
 local vu = game:GetService("VirtualUser")
 game:GetService("Players").LocalPlayer.Idled:connect(function() vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)task.wait(1)vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 end)
-
-task.spawn(function() while task.wait() do
-    pos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-    task.wait(0.0001)
-    currentSpeed = (pos-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-    if currentSpeed > 0 then
-        temptable.running = true
-    else
-        temptable.running = false
-    end
-end end)
 
 task.spawn(function()while task.wait() do
     if kocmoc.toggles.farmsnowflakes then
