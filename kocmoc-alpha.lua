@@ -301,8 +301,7 @@ function makesprinklers()
         e = 4
     end
     for i = 1, e do
-        if e ~= 1 then api.humanoid().Jump = true end
-        task.wait(.4)
+        if e ~= 1 then api.humanoid().Jump = true task.wait(.4) end
         game.ReplicatedStorage.Events.PlayerActivesCommand:FireServer({["Name"] = "Sprinkler Builder"})
         task.wait(1)
     end
