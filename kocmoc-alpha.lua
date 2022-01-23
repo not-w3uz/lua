@@ -11,11 +11,13 @@ local playerstatsevent = game:GetService("ReplicatedStorage").Events.RetrievePla
 local statstable = playerstatsevent:InvokeServer()
 local monsterspawners = game:GetService("Workspace").MonsterSpawners
 local rarename
+local done = true
+local hi = false
 
 -- Script tables
 
 local temptable = {
-    version = "2.11.0",
+    version = "2.12.0",
     blackfield = "Ant Field",
     redfields = {},
     bluefields = {},
@@ -60,8 +62,40 @@ local temptable = {
         killmondo = false,
         vicious = false
     },
-    monstertypes = {"Ladybug", "Rhino", "Spider", "Scorpion", "Mantis", "Werewolf"}
+    allplanters = {},
+    planters = {
+        planter = {},
+        cframe = {},
+        activeplanters = {
+            type = {},
+            id = {}
+        }
+    },
+    monstertypes = {"Ladybug", "Rhino", "Spider", "Scorpion", "Mantis", "Werewolf"},
+    ["stopapypa"] = function(path, part)
+        local Closest
+        for i,v in next, path:GetChildren() do
+            if v.Name ~= "PlanterBulb" then
+                if Closest == nil then
+                    Closest = v.Soil
+                else
+                    if (part.Position - v.Soil.Position).magnitude < (Closest.Position - part.Position).magnitude then
+                        Closest = v.Soil
+                    end
+                end
+            end
+        end
+        return Closest
+    end,
+    coconuts = {},
+    coconut = false
 }
+
+local planterst = {
+    plantername = {},
+    planterid = {}
+}
+
 for i,v in next, temptable.blacklist do if v == api.nickname then game.Players.LocalPlayer:Kick("You're blacklisted! Get clapped!") end end
 if temptable.honeystart == 0 then temptable.honeystart = statstable.Totals.Honey end
 
@@ -81,10 +115,12 @@ local spawnerstable = {}
 for _,v in next, game:GetService("Workspace").MonsterSpawners:GetChildren() do table.insert(spawnerstable, v.Name) end
 local accesoriestable = {}
 for _,v in next, game:GetService("ReplicatedStorage").Accessories:GetChildren() do if v.Name ~= "UpdateMeter" then table.insert(accesoriestable, v.Name) end end
+for i,v in pairs(getupvalues(require(game:GetService("ReplicatedStorage").PlanterTypes).GetTypes)) do for e,z in pairs(v) do table.insert(temptable.allplanters, e) end end
 table.sort(fieldstable)
 table.sort(accesoriestable)
 table.sort(toystable)
 table.sort(spawnerstable)
+table.sort(temptable.allplanters)
 table.sort(collectorstable)
 
 -- float pad
@@ -159,7 +195,9 @@ local kocmoc = {
         autostockings = false,
         autosamovar = false,
         autoonettart = false,
-        autocandles = false
+        autocandles = false,
+        autofeast = false,
+        autoplanters = false
     },
     vars = {
         field = "Ant Field",
@@ -189,21 +227,20 @@ local defaultkocmoc = kocmoc
 -- functions
 
 function statsget() local StatCache = require(game.ReplicatedStorage.ClientStatCache) local stats = StatCache:Get() return stats end
+function rtsg() tab = game.ReplicatedStorage.Events.RetrievePlayerStats:InvokeServer() return tab end
+
+function aboba()
+    done = false
+    api.humanoid().MoveToFinished:Connect(function() done=true end)
+    return function()
+        return done
+    end
+end
 
 function farm(trying)
-    if temptable.started.mondo then
-        if kocmoc.toggles.loopfarmspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed end
-        api.humanoid():MoveTo(trying.Position)
-        local done = false 
-        api.humanoid().MoveToFinished:Connect(function() done=true end)
-        repeat task.wait() until done or not IsToken(trying)
-    elseif (trying.Position-fieldposition).magnitude < 50 then
-        if kocmoc.toggles.loopfarmspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed end
-        api.humanoid():MoveTo(trying.Position)
-        local done = false 
-        api.humanoid().MoveToFinished:Connect(function() done=true end)
-        repeat task.wait() until done or not IsToken(trying)
-    end
+    if kocmoc.toggles.loopfarmspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed end
+    api.humanoid():MoveTo(trying.Position) 
+    repeat task.wait() until (trying.Position-api.humanoidrootpart().Position).magnitude <=4 or not IsToken(trying) or temptable.coconut
 end
 
 function disableall()
@@ -251,6 +288,26 @@ function gettoken()
     end
 end
 
+function makesprinklers()
+    sprinkler = rtsg().EquippedSprinkler
+    e = 1
+    if sprinkler == "Basic Sprinkler" or sprinkler == "The Supreme Saturator" then
+        e = 1
+    elseif sprinkler == "Silver Soakers" then
+        e = 2
+    elseif sprinkler == "Golden Gushers" then
+        e = 3
+    elseif sprinkler == "Diamond Drenchers" then
+        e = 4
+    end
+    for i = 1, e do
+        if e ~= 1 then api.humanoid().Jump = true end
+        task.wait(.4)
+        game.ReplicatedStorage.Events.PlayerActivesCommand:FireServer({["Name"] = "Sprinkler Builder"})
+        task.wait(1)
+    end
+end
+
 function IsToken(token)
     if not token then
         return false
@@ -268,6 +325,39 @@ function IsToken(token)
         return true
     else
         return false
+    end
+end
+
+function check(ok)
+    if not ok then
+        return false
+    end
+    if not ok.Parent then return false end
+    return true
+end
+
+function getplanters()
+    table.clear(planterst.plantername)
+    table.clear(planterst.planterid)
+    for i,v in pairs(debug.getupvalues(require(game:GetService("ReplicatedStorage").LocalPlanters).LoadPlanter)[4]) do 
+        if v.GrowthPercent == 1 and v.IsMine then
+            table.insert(planterst.plantername, v.Type)
+            table.insert(planterst.planterid, v.ActorID)
+        end
+    end
+end
+
+function collectplanters()
+    getplanters()
+    for i,v in pairs(planterst.plantername) do
+        if api.partwithnamepart(v, game:GetService("Workspace").Planters) and api.partwithnamepart(v, game:GetService("Workspace").Planters):FindFirstChild("Soil") then
+            api.humanoidrootpart().CFrame =  api.partwithnamepart(v, game:GetService("Workspace").Planters).Soil.CFrame
+            game:GetService("ReplicatedStorage").Events.PlanterModelCollect:FireServer(planterst.planterid[i])
+            task.wait(.5)
+            game:GetService("ReplicatedStorage").Events.PlayerActivesCommand:FireServer({["Name"] = v.." Planter"})
+            for i = 1, 5 do gettoken() end
+            task.wait(2)
+        end
     end
 end
 
@@ -312,10 +402,10 @@ end
 function converthoney()
     task.wait(0)
     if temptable.converting then
-        if game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or (game:GetService("Players").LocalPlayer.SpawnPos.Value.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 8 then
-            api.tween(1, game:GetService("Players").LocalPlayer.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0))
+        if game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or (game:GetService("Players").LocalPlayer.SpawnPos.Value.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 10 then
+            api.tween(1, game:GetService("Players").LocalPlayer.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 9))
             task.wait(.9)
-            if game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or (game:GetService("Players").LocalPlayer.SpawnPos.Value.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 8 then game:GetService("ReplicatedStorage").Events.PlayerHiveCommand:FireServer("ToggleHoneyMaking") end
+            if game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and game.Players.LocalPlayer.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or (game:GetService("Players").LocalPlayer.SpawnPos.Value.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 10 then game:GetService("ReplicatedStorage").Events.PlayerHiveCommand:FireServer("ToggleHoneyMaking") end
             task.wait(.1)
         end
     end
@@ -374,13 +464,14 @@ function getcloud()
     end
 end
 
-function getcoco()
-    for i,v in next, game.workspace.Particles:GetChildren() do
-        if v.Name == "WarningDisk" and v.BrickColor == BrickColor.new("Lime green") then
-            farm(v)
-            break
-        end
-    end
+function getcoco(v)
+    if temptable.coconut then repeat task.wait() until not temptable.coconut end
+    temptable.coconut = true
+    api.tween(.1, v.CFrame)
+    repeat task.wait() api.walkTo(v.Position) until not v.Parent
+    task.wait(.1)
+    temptable.coconut = false
+    table.remove(temptable.coconuts, table.find(temptable.coconuts, v))
 end
 
 function getfuzzy()
@@ -397,8 +488,8 @@ function getfuzzy()
 end
 
 function getflame()
-    for i,v in next, game.workspace.Particles:GetChildren() do
-        if v.Name == "FlamePart" and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
+    for i,v in next, game:GetService("Workspace").PlayerFlames:GetChildren() do
+        if tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
             farm(v)
             break
         end
@@ -485,7 +576,7 @@ farmo:CreateToggle("Autodig", nil, function(State) kocmoc.toggles.autodig = Stat
 farmo:CreateToggle("Auto Sprinkler", nil, function(State) kocmoc.toggles.autosprinkler = State end)
 farmo:CreateToggle("Farm Bubbles", nil, function(State) kocmoc.toggles.farmbubbles = State end)
 farmo:CreateToggle("Farm Flames", nil, function(State) kocmoc.toggles.farmflame = State end)
-farmo:CreateToggle("Farm Coconuts", nil, function(State) kocmoc.toggles.farmcoco = State end)
+farmo:CreateToggle("Farm Coconuts & Shower", nil, function(State) kocmoc.toggles.farmcoco = State end)
 farmo:CreateToggle("Farm Precise Crosshairs", nil, function(State) kocmoc.toggles.collectcrosshairs = State end)
 farmo:CreateToggle("Farm Fuzzy Bombs", nil, function(State) kocmoc.toggles.farmfuzzy = State end)
 farmo:CreateToggle("Farm Under Balloons", nil, function(State) kocmoc.toggles.farmunderballoons = State end)
@@ -499,7 +590,9 @@ farmt:CreateToggle("Auto Wealth Clock", nil, function(State) kocmoc.toggles.cloc
 farmt:CreateToggle("Auto Gingerbread Bears", nil, function(State) kocmoc.toggles.collectgingerbreads = State end)
 farmt:CreateToggle("Auto Samovar", nil, function(State) kocmoc.toggles.autosamovar = State end)
 farmt:CreateToggle("Auto Stockings", nil, function(State) kocmoc.toggles.autostockings = State end)
+farmt:CreateToggle("Auto Planters", nil, function(State) kocmoc.toggles.autoplanters = State end):AddToolTip("Will re-plant your planters after converting, if they hit 100%")
 farmt:CreateToggle("Auto Honey Candles", nil, function(State) kocmoc.toggles.autocandles = State end)
+farmt:CreateToggle("Auto Beesmas Feast", nil, function(State) kocmoc.toggles.autofeast = State end)
 farmt:CreateToggle("Auto Onett's Lid Art", nil, function(State) kocmoc.toggles.autoonettart = State end)
 farmt:CreateToggle("Auto Free Antpasses", nil, function(State) kocmoc.toggles.freeantpass = State end)
 farmt:CreateToggle("Farm Sprouts", nil, function(State) kocmoc.toggles.farmsprouts = State end)
@@ -513,6 +606,7 @@ farmt:CreateToggle("Auto Honeystorm", nil, function(State) kocmoc.toggles.honeys
 
 local mobkill = combtab:CreateSection("Combat")
 mobkill:CreateToggle("Train Crab", nil, function(State) if State then api.humanoidrootpart().CFrame = CFrame.new(-307.52117919922, 107.91863250732, 467.86791992188) end end)
+mobkill:CreateToggle("Train Snail", nil, function(State) fd = game.Workspace.FlowerZones['Stump Field'] if State then api.humanoidrootpart().CFrame = CFrame.new(fd.Position.X, fd.Position.Y-6, fd.Position.Z) else api.humanoidrootpart().CFrame = CFrame.new(fd.Position.X, fd.Position.Y+2, fd.Position.Z) end end)
 mobkill:CreateToggle("Kill Mondo", nil, function(State) kocmoc.toggles.killmondo = State end)
 mobkill:CreateToggle("Kill Vicious", nil, function(State) kocmoc.toggles.killvicious = State end)
 mobkill:CreateToggle("Avoid Mobs", nil, function(State) kocmoc.toggles.avoidmobs = State end)
@@ -698,12 +792,24 @@ pts:CreateDropdown("Priority List", kocmoc.priority, function(Option) end)
 
 task.spawn(function() while task.wait() do
     if kocmoc.toggles.autofarm then
-        if kocmoc.toggles.farmcoco then getcoco() end
-        if kocmoc.toggles.collectcrosshairs then getcrosshairs() end
+        --if kocmoc.toggles.farmcoco then getcoco() end
+        --if kocmoc.toggles.collectcrosshairs then getcrosshairs() end
         if kocmoc.toggles.farmflame then getflame() end
         if kocmoc.toggles.farmfuzzy then getfuzzy() end
     end
 end end)
+
+game.Workspace.Particles.ChildAdded:Connect(function(v)
+    if v.Name == "WarningDisk" and kocmoc.toggles.autofarm and kocmoc.toggles.farmcoco and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
+        table.insert(temptable.coconuts, v)
+        getcoco(v)
+    elseif v.Name == "Crosshair" and v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") and v.BrickColor ~= BrickColor.new("Flint") and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and kocmoc.toggles.autofarm and kocmoc.toggles.collectcrosshairs and not temptable.converting then
+        while check(v) do
+            task.wait()
+            api.walkTo(v.Position)
+        end
+    end
+end)
 
 task.spawn(function() while task.wait() do
     if kocmoc.toggles.autofarm then
@@ -774,13 +880,35 @@ task.spawn(function() while task.wait() do
             fieldposition = temptable.sprouts.coords.Position
             fieldpos = temptable.sprouts.coords
         end
-        if kocmoc.toggles.farmpuffshrooms then for i,v in next, workspace.Happenings.Puffshrooms:GetChildren() do if v:FindFirstChild("Puffball Stem") then temptable.magnitude = 25 fieldpos = v['Puffball Stem'].CFrame fieldposition = fieldpos.Position break end end end
+        if kocmoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") then 
+            if api.partwithnamepart("Mythic", game.Workspace.Happenings.Puffshrooms) then
+                temptable.magnitude = 25 
+                fieldpos = api.partwithnamepart("Mythic", game.Workspace.Happenings.Puffshrooms):FindFirstChild("Puffball Stem").CFrame
+                fieldposition = fieldpos.Position
+            elseif api.partwithnamepart("Legendary", game.Workspace.Happenings.Puffshrooms) then
+                temptable.magnitude = 25 
+                fieldpos = api.partwithnamepart("Legendary", game.Workspace.Happenings.Puffshrooms):FindFirstChild("Puffball Stem").CFrame
+                fieldposition = fieldpos.Position
+            elseif api.partwithnamepart("Epic", game.Workspace.Happenings.Puffshrooms) then
+                temptable.magnitude = 25 
+                fieldpos = api.partwithnamepart("Epic", game.Workspace.Happenings.Puffshrooms):FindFirstChild("Puffball Stem").CFrame
+                fieldposition = fieldpos.Position
+            elseif api.partwithnamepart("Rare", game.Workspace.Happenings.Puffshrooms) then
+                temptable.magnitude = 25 
+                fieldpos = api.partwithnamepart("Rare", game.Workspace.Happenings.Puffshrooms):FindFirstChild("Puffball Stem").CFrame
+                fieldposition = fieldpos.Position
+            else
+                temptable.magnitude = 25 
+                fieldpos = api.getbiggestmodel(game.Workspace.Happenings.Puffshrooms):FindFirstChild("Puffball Stem").CFrame
+                fieldposition = fieldpos.Position
+            end
+        end
         if tonumber(pollenpercentage) < tonumber(kocmoc.vars.convertat) then
             if not temptable.tokensfarm then
                 api.tween(2, fieldpos)
                 task.wait(2)
                 temptable.tokensfarm = true
-                if kocmoc.toggles.autosprinkler then game.ReplicatedStorage.Events.PlayerActivesCommand:FireServer({["Name"] = "Sprinkler Builder"}) end
+                if kocmoc.toggles.autosprinkler then makesprinklers() end
             else
                 if kocmoc.toggles.killmondo then
                     while kocmoc.toggles.killmondo and game.Workspace.Monsters:FindFirstChild("Mondo Chick (Lvl 8)") and not temptable.started.vicious do
@@ -805,7 +933,7 @@ task.spawn(function() while task.wait() do
                 if (fieldposition-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > temptable.magnitude then
                     api.tween(2, fieldpos)
                     task.wait(2)
-                    if kocmoc.toggles.autosprinkler then game.ReplicatedStorage.Events.PlayerActivesCommand:FireServer({["Name"] = "Sprinkler Builder"}) end
+                    if kocmoc.toggles.autosprinkler then makesprinklers() end
                 end
                 getprioritytokens()
                 if kocmoc.toggles.avoidmobs then avoidmob() end
@@ -813,12 +941,12 @@ task.spawn(function() while task.wait() do
                 if kocmoc.toggles.farmbubbles then getbubble() end
                 if kocmoc.toggles.farmclouds then getcloud() end
                 if kocmoc.toggles.farmunderballoons then getballoons() end
-                if not kocmoc.toggles.donotfarmtokens then gettoken() end
+                if not kocmoc.toggles.donotfarmtokens and done then gettoken() end
                 if not kocmoc.toggles.farmflower then getflower() end
             end
         elseif tonumber(pollenpercentage) >= tonumber(kocmoc.vars.convertat) then
             temptable.tokensfarm = false
-            api.tween(2, game:GetService("Players").LocalPlayer.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0))
+            api.tween(2, game:GetService("Players").LocalPlayer.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 9))
             task.wait(2)
             temptable.converting = true
             repeat
@@ -834,6 +962,7 @@ task.spawn(function() while task.wait() do
             temptable.converting = false
             task.wait(6)
             if kocmoc.toggles.autoquest then makequests() end
+            if kocmoc.toggles.autoplanters then collectplanters() end
         end
     end
 end end end)
@@ -898,39 +1027,50 @@ Workspace.Particles.ChildRemoved:Connect(function(instance)
 end)
 
 task.spawn(function() while task.wait(.1) do
-    if kocmoc.toggles.autosamovar then
-        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Samovar")
-        platformm = game:GetService("Workspace").Toys.Samovar.Platform
-        for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
-            if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
-                api.humanoidrootpart().CFrame = v.CFrame
+    if not temptable.converting then
+        if kocmoc.toggles.autosamovar then
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Samovar")
+            platformm = game:GetService("Workspace").Toys.Samovar.Platform
+            for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
+                if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
+                    api.humanoidrootpart().CFrame = v.CFrame
+                end
             end
         end
-    end
-    if kocmoc.toggles.autostockings then
-        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Stockings")
-        platformm = game:GetService("Workspace").Toys.Stockings.Platform
-        for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
-            if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
-                api.humanoidrootpart().CFrame = v.CFrame
+        if kocmoc.toggles.autostockings then
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Stockings")
+            platformm = game:GetService("Workspace").Toys.Stockings.Platform
+            for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
+                if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
+                    api.humanoidrootpart().CFrame = v.CFrame
+                end
             end
         end
-    end
-    if kocmoc.toggles.autoonettart then
-        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Onett's Lid Art")
-        platformm = game:GetService("Workspace").Toys["Onett's Lid Art"].Platform
-        for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
-            if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
-                api.humanoidrootpart().CFrame = v.CFrame
+        if kocmoc.toggles.autoonettart then
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Onett's Lid Art")
+            platformm = game:GetService("Workspace").Toys["Onett's Lid Art"].Platform
+            for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
+                if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
+                    api.humanoidrootpart().CFrame = v.CFrame
+                end
             end
         end
-    end
-    if kocmoc.toggles.autocandles then
-        game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Honeyday Candles")
-        platformm = game:GetService("Workspace").Toys["Honeyday Candles"].Platform
-        for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
-            if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
-                api.humanoidrootpart().CFrame = v.CFrame
+        if kocmoc.toggles.autocandles then
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Honeyday Candles")
+            platformm = game:GetService("Workspace").Toys["Honeyday Candles"].Platform
+            for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
+                if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
+                    api.humanoidrootpart().CFrame = v.CFrame
+                end
+            end
+        end
+        if kocmoc.toggles.autofeast then
+            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Beesmas Feast")
+            platformm = game:GetService("Workspace").Toys["Beesmas Feast"].Platform
+            for i,v in pairs(game.Workspace.Collectibles:GetChildren()) do
+                if (v.Position-platformm.Position).magnitude < 25 and v.CFrame.YVector.Y == 1 then
+                    api.humanoidrootpart().CFrame = v.CFrame
+                end
             end
         end
     end
@@ -980,8 +1120,8 @@ task.spawn(function()while task.wait() do
     if kocmoc.toggles.farmsnowflakes then
         for i,v in next, temptable.tokenpath:GetChildren() do
             if v:FindFirstChildOfClass("Decal") and v:FindFirstChildOfClass("Decal").Texture == "rbxassetid://6087969886" and v.Transparency == 0 then
-                api.tween(2, CFrame.new(v.Position.X, v.Position.Y+3, v.Position.Z))
-                task.wait(2)
+                api.humanoidrootpart().CFrame = CFrame.new(v.Position.X, v.Position.Y+3, v.Position.Z)
+                task.wait(3)
             end
         end
     end
@@ -997,7 +1137,7 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
             temptable.farmtoken = false
         end
         if temptable.dead then
-            task.wait(30)
+            task.wait(25)
             temptable.dead = false
             kocmoc.toggles.autofarm = true local player = game.Players.LocalPlayer
             temptable.converting = false
