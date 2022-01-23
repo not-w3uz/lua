@@ -799,7 +799,7 @@ task.spawn(function() while task.wait() do
 end end)
 
 game.Workspace.Particles.ChildAdded:Connect(function(v)
-    if v.Name == "WarningDisk" and kocmoc.toggles.autofarm and kocmoc.toggles.farmcoco and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
+    if v.Name == "WarningDisk" and not temptable.started.vicious and kocmoc.toggles.autofarm and kocmoc.toggles.farmcoco and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
         table.insert(temptable.coconuts, v)
         getcoco(v)
     elseif v.Name == "Crosshair" and v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") and v.BrickColor ~= BrickColor.new("Flint") and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and kocmoc.toggles.autofarm and kocmoc.toggles.collectcrosshairs and not temptable.converting then
