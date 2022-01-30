@@ -37,7 +37,8 @@ local temptable = {
     tokenpath = game:GetService("Workspace").Collectibles,
     started = {
         vicious = false,
-        mondo = false
+        mondo = false,
+        ant = false
     },
     detected = {
         vicious = false
@@ -401,6 +402,7 @@ function getplanters()
 end
 
 function farmant()
+    temptable.started.ant = true
     anttable = {left = true, right = false}
     temptable.oldtool = rtsg()['EquippedCollector']
     game.ReplicatedStorage.Events.ItemPackageEvent:InvokeServer("Equip",{["Mute"] = true,["Type"] = "Spark Staff",["Category"] = "Collector"})
@@ -430,6 +432,7 @@ function farmant()
     until game:GetService("Workspace").Toys["Ant Challenge"].Busy.Value == false
     task.wait(1)
     game.ReplicatedStorage.Events.ItemPackageEvent:InvokeServer("Equip",{["Mute"] = true,["Type"] = temptable.oldtool,["Category"] = "Collector"})
+    temptable.started.ant = false
 end
 
 function collectplanters()
@@ -890,15 +893,17 @@ task.spawn(function() while task.wait() do
 end end)
 
 game.Workspace.Particles.ChildAdded:Connect(function(v)
-    if v.Name == "WarningDisk" and not temptable.started.vicious and kocmoc.toggles.autofarm and kocmoc.toggles.farmcoco and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
-        table.insert(temptable.coconuts, v)
-        getcoco(v)
-        gettoken()
-    elseif v.Name == "Crosshair" and v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") and v.BrickColor ~= BrickColor.new("Flint") and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and kocmoc.toggles.autofarm and kocmoc.toggles.collectcrosshairs and not temptable.converting then
-        if #temptable.crosshairs <= 3 then
-            table.insert(temptable.crosshairs, v)
-            getcrosshairs(v)
+    if not temptable.started.vicious and not temptable.started.ant then
+        if v.Name == "WarningDisk" and not temptable.started.vicious and kocmoc.toggles.autofarm and kocmoc.toggles.farmcoco and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
+            table.insert(temptable.coconuts, v)
+            getcoco(v)
             gettoken()
+        elseif v.Name == "Crosshair" and v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") and v.BrickColor ~= BrickColor.new("Flint") and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and kocmoc.toggles.autofarm and kocmoc.toggles.collectcrosshairs and not temptable.converting then
+            if #temptable.crosshairs <= 3 then
+                table.insert(temptable.crosshairs, v)
+                getcrosshairs(v)
+                gettoken()
+            end
         end
     end
 end)
