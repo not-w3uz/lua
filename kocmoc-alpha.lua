@@ -40,7 +40,8 @@ local temptable = {
         vicious = false,
         mondo = false,
         windy = false,
-        ant = false
+        ant = false,
+        monsters = false
     },
     detected = {
         vicious = false,
@@ -934,7 +935,7 @@ task.spawn(function() while task.wait() do
                 if kocmoc.toggles.autosprinkler then makesprinklers() end
             else
                 if kocmoc.toggles.killmondo then
-                    while kocmoc.toggles.killmondo and game.Workspace.Monsters:FindFirstChild("Mondo Chick (Lvl 8)") and not temptable.started.vicious do
+                    while kocmoc.toggles.killmondo and game.Workspace.Monsters:FindFirstChild("Mondo Chick (Lvl 8)") and not temptable.started.vicious and temporary.started.monsters do
                         temptable.started.mondo = true
                         while game.Workspace.Monsters:FindFirstChild("Mondo Chick (Lvl 8)") do
                             disableall()
@@ -990,8 +991,10 @@ task.spawn(function() while task.wait() do
             if kocmoc.toggles.autoplanters then collectplanters() end
             if kocmoc.toggles.autokillmobs then 
                 if temptable.act >= kocmoc.vars.monstertimer then
+                    temporary.started.monsters = true
                     temptable.act = 0
                     killmobs() 
+                    temporary.started.monsters = false
                 end
             end
         end
@@ -1000,7 +1003,7 @@ end end end)
 
 task.spawn(function()
     while task.wait(1) do
-		if kocmoc.toggles.killvicious and temptable.detected.vicious and temptable.converting == false then
+		if kocmoc.toggles.killvicious and temptable.detected.vicious and temptable.converting == false and not temporary.started.monsters then
             temptable.started.vicious = true
             disableall()
 			local vichumanoid = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart
@@ -1029,7 +1032,7 @@ task.spawn(function()
 end)
 
 task.spawn(function() while task.wait() do
-    if kocmoc.toggles.killwindy and temptable.detected.windy and not temptable.converting and not temptable.started.vicious and not temptable.started.mondo then
+    if kocmoc.toggles.killwindy and temptable.detected.windy and not temptable.converting and not temptable.started.vicious and not temptable.started.mondo and not temporary.started.monsters then
         temptable.started.windy = true
         wlvl = "" aw = false awb = false -- some variable for autowindy, yk?
         disableall()
