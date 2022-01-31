@@ -2,6 +2,7 @@
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/Lua/main/bracketv3.lua"))()
 local api = loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/xlpapi/main/api.lua"))()
+local bssapi = loadstring(game:HttpGet("https://raw.githubusercontent.com/not-weuz/xlpapi/main/bssapi.lua"))()
 
 if not isfolder("kocmoc") then makefolder("kocmoc") end
 if isfile('kocmoc.txt') == false then (syn and syn.request or http_request)({ Url = "http://127.0.0.1:6463/rpc?v=1",Method = "POST",Headers = {["Content-Type"] = "application/json",["Origin"] = "https://discord.com"},Body = game:GetService("HttpService"):JSONEncode({cmd = "INVITE_BROWSER",args = {code = "9vG8UJXuNf"},nonce = game:GetService("HttpService"):GenerateGUID(false)}),writefile('kocmoc.txt', "discord")})end
@@ -137,6 +138,8 @@ for i,v in next, game:GetService("Workspace").MonsterSpawners:GetChildren() do i
 for i,v in next, game:GetService("Workspace").FlowerZones:GetChildren() do if v:FindFirstChild("ColorGroup") then if v:FindFirstChild("ColorGroup").Value == "Red" then table.insert(temptable.redfields, v.Name) elseif v:FindFirstChild("ColorGroup").Value == "Blue" then table.insert(temptable.bluefields, v.Name) end else table.insert(temptable.whitefields, v.Name) end end
 local flowertable = {}
 for _,z in next, game:GetService("Workspace").Flowers:GetChildren() do table.insert(flowertable, z.Position) end
+local masktable = {}
+for _,v in next, game:GetService("ReplicatedStorage").Accessories:GetChildren() do if string.match(v.Name, "Mask") then table.insert(masktable, v.Name) end end
 local collectorstable = {}
 for _,v in next, getupvalues(require(game:GetService("ReplicatedStorage").Collectors).Exists) do for e,r in next, v do table.insert(collectorstable, e) end end
 local fieldstable = {}
@@ -152,6 +155,7 @@ table.sort(fieldstable)
 table.sort(accesoriestable)
 table.sort(toystable)
 table.sort(spawnerstable)
+table.sort(masktable)
 table.sort(temptable.allplanters)
 table.sort(collectorstable)
 
@@ -180,6 +184,7 @@ antpart.Position = Vector3.new(96, 47, 553)
 antpart.Anchored = true
 antpart.Size = Vector3.new(128, 1, 50)
 antpart.Transparency = 1
+antpart.CanCollide = false
 
 -- config
 
@@ -241,7 +246,8 @@ local kocmoc = {
         autoplanters = false,
         autokillmobs = false,
         autoant = false,
-        killwindy = false
+        killwindy = false,
+        godmode = false
     },
     vars = {
         field = "Ant Field",
@@ -419,6 +425,7 @@ function getplanters()
 end
 
 function farmant()
+    antpart.CanCollide = true
     temptable.started.ant = true
     anttable = {left = true, right = false}
     temptable.oldtool = rtsg()['EquippedCollector']
@@ -450,6 +457,7 @@ function farmant()
     task.wait(1)
     game.ReplicatedStorage.Events.ItemPackageEvent:InvokeServer("Equip",{["Mute"] = true,["Type"] = temptable.oldtool,["Category"] = "Collector"})
     temptable.started.ant = false
+    antpart.CanCollide = false
 end
 
 function collectplanters()
@@ -736,88 +744,13 @@ local miscc = misctab:CreateSection("Misc")
 miscc:CreateButton("Ant Challenge Semi-Godmode", function() api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) task.wait(1) game.ReplicatedStorage.Events.ToyEvent:FireServer("Ant Challenge") game.Players.LocalPlayer.Character.HumanoidRootPart.Position = Vector3.new(93.4228, 42.3983, 553.128) task.wait(2) game.Players.LocalPlayer.Character.Humanoid.Name = 1 local l = game.Players.LocalPlayer.Character["1"]:Clone() l.Parent = game.Players.LocalPlayer.Character l.Name = "Humanoid" task.wait() game.Players.LocalPlayer.Character["1"]:Destroy() api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) task.wait(8) api.tween(1, CFrame.new(93.4228, 32.3983, 553.128)) end)
 local wstoggle = miscc:CreateToggle("Walk Speed", nil, function(State) kocmoc.toggles.loopspeed = State end) wstoggle:CreateKeybind("K", function(Key) end)
 local jptoggle = miscc:CreateToggle("Jump Power", nil, function(State) kocmoc.toggles.loopjump = State end) jptoggle:CreateKeybind("L", function(Key) end)
+miscc:CreateToggle("Godmode", nil, function(State) kocmoc.toggles.godmode = State if State then bssapi:Godmode(true) else bssapi:Godmode(false) end end)
 local misco = misctab:CreateSection("Other")
 misco:CreateDropdown("Equip Accesories", accesoriestable, function(Option) local ohString1 = "Equip" local ohTable2 = { ["Mute"] = false, ["Type"] = Option, ["Category"] = "Accessory" } game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer(ohString1, ohTable2) end)
+misco:CreateDropdown("Equip Masks", masktable, function(Option) local ohString1 = "Equip" local ohTable2 = { ["Mute"] = false, ["Type"] = Option, ["Category"] = "Accessory" } game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer(ohString1, ohTable2) end)
 misco:CreateDropdown("Equip Collectors", collectorstable, function(Option) local ohString1 = "Equip" local ohTable2 = { ["Mute"] = false, ["Type"] = Option, ["Category"] = "Collector" } game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer(ohString1, ohTable2) end)
 misco:CreateDropdown("Generate Amulet", {"Supreme Star Amulet", "Diamond Star Amulet", "Gold Star Amulet","Silver Star Amulet","Bronze Star Amulet","Moon Amulet"}, function(Option) local A_1 = Option.." Generator" local Event = game:GetService("ReplicatedStorage").Events.ToyEvent Event:FireServer(A_1) end)
 misco:CreateButton("Export Stats Table", function() local StatCache = require(game.ReplicatedStorage.ClientStatCache)writefile("Stats_"..api.nickname..".json", StatCache:Encode()) end)
-local pepsif = misctab:CreateSection("Pepsi Functions")
-pepsif:CreateButton("Enable Pepsi Functions",function()
-    Pepsi, dbg = Pepsi, dbg
-    if not Pepsi then -- Loser
-        loadstring(rawget(rawget(game:GetObjects("rbxassetid://3554165973"), 0x1):GetChildren(), 0x1).ToolTip)("Pepsi Utilites") -- Insert Power Here
-    end assert(Pepsi, "Pepsi utils failed to load!") spawn(function()pcall(function()if (true or 2 == shared.devmode) and dbg.attach then pcall(dbg.attach, "pepsiswarm")end end)end)
-    pepsif:CreateToggle("Pepsi's Godmode", nil, function(State)
-        if temptable.pepsigodmode == false then
-            temptable.pepsigodmode = true
-            local tool = nil
-            if kocmoc.toggles.autodig then
-                tool = Pepsi.Tool()
-            end
-                if tool and autodig and dbg and dbg.sc and dbg.gse and (math.random(3) == 2 or Pepsi.IsMarked(tool, "scoop")) then
-                    pcall(function()
-                    pcall(dbg.sc, rawget(dbg.gse(tool:FindFirstChild("ClientScriptMouse")), "collectStart"), 11, ((shared.PepsiSwarm.mods.scoop and "GetMouseButtonsPressed") or "IsMouseButtonPressed"))
-                    end)
-                    if dbg and type(dbg.gse) == "function" then
-                        pcall(function()
-                            dbg.gse(Pepsi.Tool().ClientScriptMouse).onEquippedLocal(Pepsi.Mouse())
-                        end)
-                    end
-                    Pepsi.Mark(tool, "scoop")
-                end
-            --end
-            task.wait(0.5)
-            local cam = Pepsi.GetCam()
-            local cf, me = cam.CFrame, Pepsi.Lp
-            local c, h = (me.Character or workspace:FindFirstChild(me.Name)), Pepsi.Human()
-            h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-            local nh = h:Clone()
-            Pepsi.Mark(nh, "god")
-            me.Character = nil
-            nh:SetStateEnabled(15, false)
-            nh:SetStateEnabled(1, false)
-            nh:SetStateEnabled(0, false)
-            nh.Parent = c
-            h:Destroy()
-            me.Character, cam.CameraSubject = c, nh
-            Pepsi.Rs:wait()
-            cam.CFrame = cf
-            h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-            local s = c:FindFirstChild("Animate")
-            if s then
-                s.Disabled = true
-                Pepsi.Rs:wait()
-                s.Disabled = false
-            end
-            delay(2, function()
-                if nh then
-                    nh.Health = 100
-                end
-            end)
-            if dbg and type(dbg.gse) == "function" then
-                pcall(function()
-                    dbg.gse(Pepsi.Tool().ClientScriptMouse).onEquippedLocal(Pepsi.Mouse())
-                end)
-            end
-        else
-            temptable.pepsigodmode = false
-            local me = Pepsi.Lp
-            local c, h = (me.Character or workspace:FindFirstChild(me.Name)), Pepsi.Human()
-            h:SetStateEnabled(15, true)
-            h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
-            me.Character = nil
-            h:ChangeState(15)
-            me.Character = c
-            h.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
-            Pepsi.Mark(h, "god", false)
-            if dbg and type(dbg.gse) == "function" then
-                pcall(function()
-                    dbg.gse(Pepsi.Tool().ClientScriptMouse).onEquippedLocal(Pepsi.Mouse())
-                end)
-            end
-        end
-    end)
-end)
 
 
 local extras = extrtab:CreateSection("Extras")
