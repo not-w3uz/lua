@@ -38,10 +38,12 @@ local temptable = {
     started = {
         vicious = false,
         mondo = false,
+        windy = false,
         ant = false
     },
     detected = {
-        vicious = false
+        vicious = false,
+        windy = false
     },
     tokensfarm = false,
     converting = false,
@@ -57,6 +59,7 @@ local temptable = {
     beta = false,
     myhiveis = false,
     invis = false,
+    windy = nil,
     sprouts = {
         detected = false,
         coords
@@ -64,7 +67,8 @@ local temptable = {
     cache = {
         autofarm = false,
         killmondo = false,
-        vicious = false
+        vicious = false,
+        windy = false
     },
     allplanters = {},
     planters = {
@@ -113,7 +117,11 @@ local temptable = {
         end
     end,
     runningfor = 0,
-    oldtool = rtsg()["EquippedCollector"]
+    oldtool = rtsg()["EquippedCollector"],
+    ['gacf'] = function(part, st)
+        coordd = CFrame.new(part.Position.X, part.Position.Y+st, part.Position.Z)
+        return coordd
+    end
 }
 local planterst = {
     plantername = {},
@@ -232,7 +240,8 @@ local kocmoc = {
         autofeast = false,
         autoplanters = false,
         autokillmobs = false,
-        autoant = false
+        autoant = false,
+        killwindy = false
     },
     vars = {
         field = "Ant Field",
@@ -282,6 +291,10 @@ function disableall()
         kocmoc.toggles.killvicious = false
         temptable.cache.vicious = true
     end
+    if kocmoc.toggles.killwindy and not temptable.started.windy then
+        kocmoc.toggles.killwindy = false
+        temptable.cache.windy = true
+    end
 end
 
 function enableall()
@@ -296,6 +309,10 @@ function enableall()
     if temptable.cache.vicious then
         kocmoc.toggles.killvicious = true
         temptable.cache.vicious = false
+    end
+    if temptable.cache.windy then
+        kocmoc.toggles.killwindy = true
+        temptable.cache.windy = false
     end
 end
 
@@ -699,6 +716,7 @@ mobkill:CreateToggle("Train Crab", nil, function(State) if State then api.humano
 mobkill:CreateToggle("Train Snail", nil, function(State) fd = game.Workspace.FlowerZones['Stump Field'] if State then api.humanoidrootpart().CFrame = CFrame.new(fd.Position.X, fd.Position.Y-6, fd.Position.Z) else api.humanoidrootpart().CFrame = CFrame.new(fd.Position.X, fd.Position.Y+2, fd.Position.Z) end end)
 mobkill:CreateToggle("Kill Mondo", nil, function(State) kocmoc.toggles.killmondo = State end)
 mobkill:CreateToggle("Kill Vicious", nil, function(State) kocmoc.toggles.killvicious = State end)
+mobkill:CreateToggle("Kill Windy", nil, function(State) kocmoc.toggles.killwindy = State end)
 mobkill:CreateToggle("Auto Kill Mobs", nil, function(State) kocmoc.toggles.autokillmobs = State end)
 mobkill:CreateToggle("Avoid Mobs", nil, function(State) kocmoc.toggles.avoidmobs = State end)
 mobkill:CreateToggle("Auto Ant", nil, function(State) kocmoc.toggles.autoant = State end):AddToolTip("You Need Spark Stuff 😋")
@@ -894,11 +912,11 @@ end end)
 
 game.Workspace.Particles.ChildAdded:Connect(function(v)
     if not temptable.started.vicious and not temptable.started.ant then
-        if v.Name == "WarningDisk" and not temptable.started.vicious and kocmoc.toggles.autofarm and kocmoc.toggles.farmcoco and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
+        if v.Name == "WarningDisk" and not temptable.started.vicious and kocmoc.toggles.autofarm and not temptable.started.ant and kocmoc.toggles.farmcoco and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
             table.insert(temptable.coconuts, v)
             getcoco(v)
             gettoken()
-        elseif v.Name == "Crosshair" and v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") and v.BrickColor ~= BrickColor.new("Flint") and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and kocmoc.toggles.autofarm and kocmoc.toggles.collectcrosshairs and not temptable.converting then
+        elseif v.Name == "Crosshair" and v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") and not temptable.started.ant and v.BrickColor ~= BrickColor.new("Flint") and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and kocmoc.toggles.autofarm and kocmoc.toggles.collectcrosshairs and not temptable.converting then
             if #temptable.crosshairs <= 3 then
                 table.insert(temptable.crosshairs, v)
                 getcrosshairs(v)
@@ -1076,6 +1094,40 @@ task.spawn(function()
 		end
 	end
 end)
+
+task.spawn(function() while task.wait() do
+    if kocmoc.toggles.killwindy and temptable.detected.windy and not temptable.converting and not temptable.started.vicious and not temptable.started.mondo then
+        temptable.started.windy = true
+        wlvl = "" aw = false awb = false -- some variable for autowindy, yk?
+        disableall()
+        while kocmoc.toggles.killwindy and temptable.detected.windy do
+            if not aw then
+                for i,v in pairs(workspace.Monsters:GetChildren()) do
+                    if string.find(v.Name, "Windy") then wlvl = v.Name aw = true -- we found windy!
+                    end
+                end
+            end
+            if aw then
+                for i,v in pairs(workspace.Monsters:GetChildren()) do
+                    if string.find(v.Name, "Windy") then
+                        if v.Name ~= wlvl then
+                            temptable.float = false task.wait(5) for i =1, 5 do gettoken(api.humanoidrootpart().Position) end -- collect tokens :yessir:
+                            wlvl = v.Name
+                        end
+                    end
+                end
+            end
+            if not awb then api.tween(1,temptable.gacf(temptable.windy, 5)) task.wait(1) awb = true end
+            if awb and temptable.windy.Name == "Windy" then
+                api.humanoidrootpart().CFrame = temptable.gacf(temptable.windy, 25) temptable.float = true task.wait()
+            end
+        end 
+        enableall()
+        temptable.float = false
+        temptable.started.windy = false
+    end
+end end)
+
 task.spawn(function() while task.wait(0.001) do
     if kocmoc.toggles.traincrab then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-259, 111.8, 496.4) * CFrame.fromEulerAnglesXYZ(0, 110, 90) temptable.float = true temptable.float = false end
     if kocmoc.toggles.farmrares then for k,v in next, game.workspace.Collectibles:GetChildren() do if v.CFrame.YVector.Y == 1 then if v.Transparency == 0 then decal = v:FindFirstChildOfClass("Decal") for e,r in next, kocmoc.rares do if decal.Texture == r or decal.Texture == "rbxassetid://"..r then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame break end end end end end end
@@ -1095,6 +1147,7 @@ game:GetService("Workspace").Particles.Folder2.ChildRemoved:Connect(function(chi
         temptable.sprouts.coords = ""
     end
 end)
+
 Workspace.Particles.ChildAdded:Connect(function(instance)
     if string.find(instance.Name, "Vicious") then
         temptable.detected.vicious = true
@@ -1103,6 +1156,16 @@ end)
 Workspace.Particles.ChildRemoved:Connect(function(instance)
     if string.find(instance.Name, "Vicious") then
         temptable.detected.vicious = false
+    end
+end)
+game:GetService("Workspace").NPCBees.ChildAdded:Connect(function(v)
+    if v.Name == "Windy" then
+        task.wait(3) temptable.windy = v temptable.detected.windy = true
+    end
+end)
+game:GetService("Workspace").NPCBees.ChildRemoved:Connect(function(v)
+    if v.Name == "Windy" then
+        task.wait(3) temptable.windy = nil temptable.detected.windy = false
     end
 end)
 
@@ -1197,11 +1260,13 @@ local vu = game:GetService("VirtualUser")
 game:GetService("Players").LocalPlayer.Idled:connect(function() vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)task.wait(1)vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 end)
 
-task.spawn(function()while task.wait(3) do
+task.spawn(function()while task.wait() do
     if kocmoc.toggles.farmsnowflakes then
+        task.wait(3)
         for i,v in next, temptable.tokenpath:GetChildren() do
             if v:FindFirstChildOfClass("Decal") and v:FindFirstChildOfClass("Decal").Texture == "rbxassetid://6087969886" and v.Transparency == 0 then
                 api.humanoidrootpart().CFrame = CFrame.new(v.Position.X, v.Position.Y+3, v.Position.Z)
+                break
             end
         end
     end
