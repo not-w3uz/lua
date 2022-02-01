@@ -372,8 +372,7 @@ function killmobs()
                 else
                     monsterpart = v.Territory.Value
                 end
-                api.tween(1,monsterpart.CFrame)
-                task.wait(1)
+                api.humanoidrootpart().CFrame = monsterpart.CFrame
                 repeat api.humanoidrootpart().CFrame = monsterpart.CFrame avoidmob() task.wait(1) until v:FindFirstChild("TimerLabel", true).Visible
                 for i = 1, 4 do gettoken(monsterpart.Position) end
             end
@@ -646,15 +645,12 @@ function makequests()
                     api.tween(2,CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z))
                     task.wait(3)
                 end
-                for b,z in next, getconnections(button) do
-                    z.Function()
-                end
+                for b,z in next, getconnections(button) do    z.Function()    end
                 task.wait(8)
                 if image.ImageTransparency == 0 then
-                    for b,z in next, getconnections(button) do
-                        z.Function()
-                    end
+                    for b,z in next, getconnections(button) do    z.Function()    end
                 end
+                task.wait(2)
             end
         end     
     end end end end end
@@ -726,9 +722,9 @@ mobkill:CreateToggle("Train Snail", nil, function(State) fd = game.Workspace.Flo
 mobkill:CreateToggle("Kill Mondo", nil, function(State) kocmoc.toggles.killmondo = State end)
 mobkill:CreateToggle("Kill Vicious", nil, function(State) kocmoc.toggles.killvicious = State end)
 mobkill:CreateToggle("Kill Windy", nil, function(State) kocmoc.toggles.killwindy = State end)
-mobkill:CreateToggle("Auto Kill Mobs", nil, function(State) kocmoc.toggles.autokillmobs = State end)
+mobkill:CreateToggle("Auto Kill Mobs", nil, function(State) kocmoc.toggles.autokillmobs = State end):AddToolTip("Kills mobs after x pollen converting")
 mobkill:CreateToggle("Avoid Mobs", nil, function(State) kocmoc.toggles.avoidmobs = State end)
-mobkill:CreateToggle("Auto Ant", nil, function(State) kocmoc.toggles.autoant = State end):AddToolTip("You Need Spark Stuff 😋")
+mobkill:CreateToggle("Auto Ant", nil, function(State) kocmoc.toggles.autoant = State end):AddToolTip("You Need Spark Stuff 😋; Goes to Ant Challenge after pollen converting")
 
 local amks = combtab:CreateSection("Auto Kill Mobs Settings")
 amks:CreateTextBox('Kill Mobs After x Convertions', 'default = 3', true, function(Value) kocmoc.vars.monstertimer = tonumber(Value) end)
