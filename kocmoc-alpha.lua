@@ -21,7 +21,7 @@ local hi = false
 -- Script tables
 
 local temptable = {
-    version = "2.14.0",
+    version = "2.15.0",
     blackfield = "Ant Field",
     redfields = {},
     bluefields = {},
@@ -30,9 +30,6 @@ local temptable = {
     balloondetected = false,
     puffshroomdetected = false,
     magnitude = 70,
-    blacklist = {
-        "e_mrFluk2281"
-    },
     running = false,
     configname = "",
     tokenpath = game:GetService("Workspace").Collectibles,
@@ -123,6 +120,17 @@ local temptable = {
     ['gacf'] = function(part, st)
         coordd = CFrame.new(part.Position.X, part.Position.Y+st, part.Position.Z)
         return coordd
+    end,
+    ['feed'] = function(x, y, type, amount)
+        if not amount then
+            amount = 1
+        end
+        local bo = tonumber(x)
+        local ba = tonumber(y)
+        local be = type
+        local br = tonumber(amount)
+
+        game:GetService("ReplicatedStorage").Events.ConstructHiveCellFromEgg:InvokeServer(bo, ba, be, br)
     end
 }
 local planterst = {
@@ -271,6 +279,20 @@ local kocmoc = {
         white = false,
         red = false,
         blue = false
+    },
+    beessettings = {
+        general = {
+            x = 1,
+            y = 1,
+            amount = 1
+        },
+        usb = "",
+        usbtoggle = false,
+        ugb = false,
+        foodtype = "Treat",
+        af = false,
+        mutation = "Convert Amount",
+        umb = false
     }
 }
 
@@ -373,7 +395,7 @@ function killmobs()
                     monsterpart = v.Territory.Value
                 end
                 api.humanoidrootpart().CFrame = monsterpart.CFrame
-                repeat api.humanoidrootpart().CFrame = monsterpart.CFrame avoidmob() task.wait(1) until v:FindFirstChild("TimerLabel", true).Visible
+                repeat api.humanoidrootpart().CFrame = monsterpart.CFrame avoidmob() task.wait(1) until v:FindFirstChild("TimerLabel", true).Visible or api.humanoid().Health == 0
                 for i = 1, 4 do gettoken(monsterpart.Position) end
             end
         end
@@ -645,9 +667,13 @@ function makequests()
                     api.tween(2,CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z))
                     task.wait(3)
                 end
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z)
+                task.wait(.1)
                 for b,z in next, getconnections(button) do    z.Function()    end
                 task.wait(8)
                 if image.ImageTransparency == 0 then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z)
+                    task.wait(.1)
                     for b,z in next, getconnections(button) do    z.Function()    end
                 end
                 task.wait(2)
@@ -663,6 +689,7 @@ local hometab = Window:CreateTab("Home")
 local farmtab = Window:CreateTab("Farming")
 local combtab = Window:CreateTab("Combat")
 local wayptab = Window:CreateTab("Waypoints")
+local hivetab = Window:CreateTab("Hive")
 local misctab = Window:CreateTab("Misc")
 local extrtab = Window:CreateTab("Extra")
 local setttab = Window:CreateTab("Settings")
@@ -735,6 +762,22 @@ wayp:CreateDropdown("Field Teleports", fieldstable, function(Option) game.Player
 wayp:CreateDropdown("Monster Teleports", spawnerstable, function(Option) d = game:GetService("Workspace").MonsterSpawners:FindFirstChild(Option) game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d.Position.X, d.Position.Y+3, d.Position.Z) end)
 wayp:CreateDropdown("Toys Teleports", toystable, function(Option) d = game:GetService("Workspace").Toys:FindFirstChild(Option).Platform game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(d.Position.X, d.Position.Y+3, d.Position.Z) end)
 wayp:CreateButton("Teleport to hive", function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game:GetService("Players").LocalPlayer.SpawnPos.Value end)
+
+
+local ghive = hivetab:CreateSection("Hive Position")
+ghive:CreateTextBox("X", "", true, function(Value) kocmoc.beessettings.general.x = Value end)
+ghive:CreateTextBox("Y", "", true, function(Value) kocmoc.beessettings.general.y = Value end)
+ghive:CreateTextBox("Amount", "", true, function(Value) kocmoc.beessettings.general.amount = Value end)
+local arjhive = hivetab:CreateSection("Auto Royal Jelly")
+arjhive:CreateTextBox("Bee", "", false, function(Value) kocmoc.beessettings.usb = Value end)
+arjhive:CreateToggle("Until Selected Bee", nil, function(State) kocmoc.beessettings.usbtoggle = State end)
+local ugbhive = hivetab:CreateSection("Autofeed")
+ugbhive:CreateDropdown("Food Type", {"Treat", "Sunflower Seed", "Blueberry", "Strawberry", "Bitterberry", "Pineapple", "GingerbreadBear"}, function(Option) kocmoc.beessettings.foodtype = Option end)
+ugbhive:CreateToggle("Food Until Gifted", nil, function(State) kocmoc.beessettings.ugb = State end)
+ugbhive:CreateToggle("Auto Feed", nil, function(State) kocmoc.beessettings.af = State end)
+local umhive = hivetab:CreateSection("Mutation Rolling")
+umhive:CreateDropdown("Mutation", {"Convert Amount", "Gather Amount", "Ability Rate", "Attack", "Energy"}, function(Option) kocmoc.beessettings.mutation = Option end)
+umhive:CreateToggle("Roll Until Mutation", nil, function(State) kocmoc.beessettings.umb = State end)
 
 
 local miscc = misctab:CreateSection("Misc")
@@ -1240,8 +1283,30 @@ task.spawn(function() while task.wait() do
     end
 end end)
 
+task.spawn(function() while task.wait(.00000000000000001) do
+    if kocmoc.beessettings.usbtoggle then
+        if not game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.TypeName.Text:match(kocmoc.beessettings.usb) then
+            temptable.feed(kocmoc.beessettings.general.x, kocmoc.beessettings.general.y, "RoyalJelly")
+        end
+    end
+    if kocmoc.beessettings.ugb then
+        if not game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.TypeName.Text:match("Gifted") then
+            temptable.feed(kocmoc.beessettings.general.x, kocmoc.beessettings.general.y, kocmoc.beessettings.foodtype)
+        end
+    end
+    if kocmoc.beessettings.af then
+        temptable.feed(kocmoc.beessettings.general.x, kocmoc.beessettings.general.y, kocmoc.beessettings.foodtype, kocmoc.beessettings.general.amount)
+    end
+    if kocmoc.beessettings.umb then
+        if not game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.MutationFrame.MutationLabel.Text:match(kocmoc.beessettings.mutation) then
+            temptable.feed(kocmoc.beessettings.general.x, kocmoc.beessettings.general.y, "Bitterberry", kocmoc.beessettings.general.amount)
+        end
+    end
+end end)
+
 hives = game.Workspace.Honeycombs:GetChildren() for i = #hives, 1, -1 do  v = game.Workspace.Honeycombs:GetChildren()[i] if v.Owner.Value == nil then game.ReplicatedStorage.Events.ClaimHive:FireServer(v.HiveID.Value) end end
 if _G.autoload then if isfile("kocmoc/BSS_".._G.autoload..".json") then kocmoc = game:service'HttpService':JSONDecode(readfile("kocmoc/BSS_".._G.autoload..".json")) end end
 for _, part in next, workspace:FindFirstChild("FieldDecos"):GetDescendants() do if part:IsA("BasePart") then part.CanCollide = false part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency task.wait() end end
 for _, part in next, workspace:FindFirstChild("Decorations"):GetDescendants() do if part:IsA("BasePart") and (part.Parent.Name == "Bush" or part.Parent.Name == "Blue Flower") then part.CanCollide = false part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency task.wait() end end
 for i,v in next, workspace.Decorations.Misc:GetDescendants() do if v.Parent.Name == "Mushroom" then v.CanCollide = false v.Transparency = 0.5 end end
+game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.MutationFrame.MutationLabel.Text = ""
