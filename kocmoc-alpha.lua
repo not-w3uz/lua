@@ -138,7 +138,6 @@ local planterst = {
     planterid = {}
 }
 
-for i,v in next, temptable.blacklist do if v == api.nickname then game.Players.LocalPlayer:Kick("You're blacklisted! Get clapped!") end end
 if temptable.honeystart == 0 then temptable.honeystart = statstable.Totals.Honey end
 
 
