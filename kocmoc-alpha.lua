@@ -769,14 +769,14 @@ ghive:CreateTextBox("Y", "", true, function(Value) kocmoc.beessettings.general.y
 ghive:CreateTextBox("Amount", "", true, function(Value) kocmoc.beessettings.general.amount = Value end)
 local arjhive = hivetab:CreateSection("Auto Royal Jelly")
 arjhive:CreateTextBox("Bee", "", false, function(Value) kocmoc.beessettings.usb = Value end)
-arjhive:CreateToggle("Until Selected Bee", nil, function(State) kocmoc.beessettings.usbtoggle = State end)
+arjhive:CreateToggle("Until Selected Bee", nil, function(State) kocmoc.beessettings.usbtoggle = State if not State then game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.TypeName.Text = "" end end)
 local ugbhive = hivetab:CreateSection("Autofeed")
 ugbhive:CreateDropdown("Food Type", {"Treat", "Sunflower Seed", "Blueberry", "Strawberry", "Bitterberry", "Pineapple", "GingerbreadBear"}, function(Option) kocmoc.beessettings.foodtype = Option end)
-ugbhive:CreateToggle("Food Until Gifted", nil, function(State) kocmoc.beessettings.ugb = State end)
+ugbhive:CreateToggle("Food Until Gifted", nil, function(State) kocmoc.beessettings.ugb = State if not State then game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.TypeName.Text = "" end end)
 ugbhive:CreateToggle("Auto Feed", nil, function(State) kocmoc.beessettings.af = State end)
 local umhive = hivetab:CreateSection("Mutation Rolling")
 umhive:CreateDropdown("Mutation", {"Convert Amount", "Gather Amount", "Ability Rate", "Attack", "Energy"}, function(Option) kocmoc.beessettings.mutation = Option end)
-umhive:CreateToggle("Roll Until Mutation", nil, function(State) kocmoc.beessettings.umb = State end)
+umhive:CreateToggle("Roll Until Mutation", nil, function(State) kocmoc.beessettings.umb = State if not State then game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.MutationFrame.MutationLabel.Text.Text = "" end end)
 
 
 local miscc = misctab:CreateSection("Misc")
